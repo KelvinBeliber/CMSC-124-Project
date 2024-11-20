@@ -7,7 +7,6 @@
 import re
 import os
 
-# list to store the compiled lexemes
 compiled_lex = []
 
 class LOLLexer:
@@ -18,20 +17,21 @@ class LOLLexer:
         self.current_position = 0
 
     def tokenize(self):
-        in_comment = False  # Tracks if we're inside an `OBTW` comment block
+        in_comment = False
         while self.current_position < len(self.source_code):
             token = self.match_token()
             if token is not None:
-                # Detecting the `OBTW` and `TLDR` for block comments
                 if token.type == 'Comment Delimiter' and token.value.strip() == 'OBTW':
                     in_comment = True
+                    self.tokens.append(token)
                 elif token.type == 'Comment Delimiter' and token.value.strip() == 'TLDR':
                     in_comment = False
-                    continue  # Skip the TLDR token to not add it to tokens
-                # We add `BTW` as a comment line to the tokens
-                if not in_comment and token.type == 'Comment Line':
                     self.tokens.append(token)
-                elif not in_comment and token.type != 'Comment Line':
+                    continue
+                elif in_comment:
+                    if token.type == 'Comment Line':
+                        self.tokens.append(token)
+                else:
                     self.tokens.append(token)
             else:
                 break
@@ -41,7 +41,7 @@ class LOLLexer:
         for pattern, token_type in token_patterns.items():
             match = re.match(pattern, self.source_code[self.current_position:])
             if match:
-                value = match.group(0).strip()  # Normalize the value
+                value = match.group(0).strip()
                 self.current_position += len(match.group(0))
                 return Token(token_type, value)
         return None
@@ -52,15 +52,14 @@ class Token:
         self.type = type
         self.value = value
 
-# LOLCODE token patterns
 token_patterns = {
     r'\s*HAI\s*': 'Code Delimiter',
     r'\s*KTHXBYE\s*': 'Code Delimiter',
     r'\s*WAZZUP\s+': 'Variable Declaration Delimiter',
     r'\s*BUHBYE\s+': 'Variable Declaration Delimiter',
-    r'\s*OBTW\s+': 'Comment Delimiter',  # detect OBTW as the start of a block comment
-    r'\s*TLDR\s+': 'Comment Delimiter',  # detect TLDR as the end of a block comment
-    r'\s*BTW\s.*': 'Comment Line',  # detect BTW followed by anything as a comment line
+    r'\s*TLDR\s+': 'Comment Delimiter',
+    r'\s*OBTW\s+': 'Comment Delimiter',
+    r'((\s*^BTW .*)|( ^BTW .*)|(\s*^OBTW .*)|( ^OBTW .*))': 'Comment Line',
     r'\s*I HAS A\s+': 'Variable Declaration',
     r'\s*ITZ\s+': 'Variable Assignment',
     r'\s*R\s+': 'Variable Assignment',
@@ -139,6 +138,6 @@ def main():
     for token_value, token_type in tokens:
         print(f"{token_type:>30} : {token_value}")
 
-# execute main function
 if __name__ == "__main__":
     main()
+
