@@ -18,18 +18,21 @@ class LOLLexer:
         self.current_position = 0
 
     def tokenize(self):
-        hasobtw = 0
+        in_comment = False  # Tracks if we're inside an `OBTW` comment block
         while self.current_position < len(self.source_code):
             token = self.match_token()
             if token is not None:
-                if hasobtw == 0 and token.value[0:4] == 'OBTW':  # Start of multi-line comment
-                    hasobtw = 1
-                if hasobtw == 1:
-                    if token.value == 'TLDR':  # End of multi-line comment
-                        hasobtw = 0
-                if token.type == 'Special Characters' and hasobtw != 1:
-                    continue
-                self.tokens.append(token)  # Append the matched token to the list
+                # Detecting the `OBTW` and `TLDR` for block comments
+                if token.type == 'Comment Delimiter' and token.value.strip() == 'OBTW':
+                    in_comment = True
+                elif token.type == 'Comment Delimiter' and token.value.strip() == 'TLDR':
+                    in_comment = False
+                    continue  # Skip the TLDR token to not add it to tokens
+                # We add `BTW` as a comment line to the tokens
+                if not in_comment and token.type == 'Comment Line':
+                    self.tokens.append(token)
+                elif not in_comment and token.type != 'Comment Line':
+                    self.tokens.append(token)
             else:
                 break
         return self.tokens
@@ -38,10 +41,11 @@ class LOLLexer:
         for pattern, token_type in token_patterns.items():
             match = re.match(pattern, self.source_code[self.current_position:])
             if match:
-                value = match.group(0).replace('\n','')
-                self.current_position += len(value)
+                value = match.group(0).strip()  # Normalize the value
+                self.current_position += len(match.group(0))
                 return Token(token_type, value)
         return None
+
 
 class Token:
     def __init__(self, type, value):
@@ -50,16 +54,17 @@ class Token:
 
 # LOLCODE token patterns
 token_patterns = {
-    r'\s*HAI\s+': 'Code Delimiter',
-    r'\s*KTHXBYE\s+': 'Code Delimiter',
+    r'\s*HAI\s*': 'Code Delimiter',
+    r'\s*KTHXBYE\s*': 'Code Delimiter',
     r'\s*WAZZUP\s+': 'Variable Declaration Delimiter',
     r'\s*BUHBYE\s+': 'Variable Declaration Delimiter',
-    r'\s*TLDR\s+': 'Comment Delimiter',
-    r'((\s*^BTW .*)|( ^BTW .*)|(\s*^OBTW .*)|( ^OBTW .*))': 'Comment Line',
+    r'\s*OBTW\s+': 'Comment Delimiter',  # detect OBTW as the start of a block comment
+    r'\s*TLDR\s+': 'Comment Delimiter',  # detect TLDR as the end of a block comment
+    r'\s*BTW\s.*': 'Comment Line',  # detect BTW followed by anything as a comment line
     r'\s*I HAS A\s+': 'Variable Declaration',
     r'\s*ITZ\s+': 'Variable Assignment',
     r'\s*R\s+': 'Variable Assignment',
-    r'\s*AN\s+': 'Parameter Delimiter',                                   
+    r'\s*AN\s+': 'Parameter Delimiter',
     r'\s*SUM OF\s+': 'Arithmetic Operation',
     r'\s*DIFF OF\s+': 'Arithmetic Operation',
     r'\s*PRODUKT OF\s+': 'Arithmetic Operation',
@@ -77,7 +82,7 @@ token_patterns = {
     r'\s*DIFFRINT\s+': 'Comparison Operation',
     r'\s*SMOOSH\s+': 'String Concatenation',
     r'\s*MAEK\s+': 'Typecasting Operation',
-    r'\s*A\s+': 'Typecasting Operation',                   
+    r'\s*A\s+': 'Typecasting Operation',
     r'\s*IS NOW A\s+': 'Typecasting Operation',
     r'\s*VISIBLE\s+': 'Output Keyword',
     r'\s*\+\s+': 'Output Delimiter',
@@ -102,15 +107,15 @@ token_patterns = {
     r'\s*GTFO\s+': 'Return Keyword',
     r'\s*FOUND YR\s+': 'Return Keyword',
     r'\s*I IZ\s+': 'Function Call',
-    r'\s*MKAY\s+': 'Concatenation Delimiter',                              
+    r'\s*MKAY\s+': 'Concatenation Delimiter',
     r'\s*NOOB\s+': 'Void Literal',
-    r'\s*(NUMBR|NUMBAR|YARN|TROOF|NOOB)\s?': 'Type Literal',  
-    r'\s*(WIN|FAIL)\s*': 'TROOF Literal',                 
-    r'\s*[a-zA-Z][a-zA-Z0-9_]*\s*': 'Identifier',           
-    r'\s*-?(0|[1-9][0-9]*)?\.[0-9]+\s*': 'NUMBAR Literal',  
-    r'\s*0\s*|^-?[1-9][0-9]*\s*': 'NUMBR Literal',     
-    r'\s*\"[^\"]*\"\s*': 'YARN Literal',   
-    r'\s?.*\s?': 'Special Characters'          
+    r'\s*(NUMBR|NUMBAR|YARN|TROOF|NOOB)\s?': 'Type Literal',
+    r'\s*(WIN|FAIL)\s*': 'TROOF Literal',
+    r'\s*[a-zA-Z][a-zA-Z0-9_]*\s*': 'Identifier',
+    r'\s*-?(0|[1-9][0-9]*)?\.[0-9]+\s*': 'NUMBAR Literal',
+    r'\s*0\s*|^-?[1-9][0-9]*\s*': 'NUMBR Literal',
+    r'\s*\"[^\"]*\"\s*': 'YARN Literal',
+    r'\s?.*\s?': 'Special Characters'
 }
 
 def lex(filename):
@@ -134,6 +139,6 @@ def main():
     for token_value, token_type in tokens:
         print(f"{token_type:>30} : {token_value}")
 
-# Execute main function
+# execute main function
 if __name__ == "__main__":
     main()
