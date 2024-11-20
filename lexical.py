@@ -11,8 +11,7 @@ compiled_lex = []
 
 class LOLLexer:
     def __init__(self, source_code_file):
-        with open(source_code_file, 'r') as file:
-            self.source_code = file.read()
+        self.source_code = source_code_file
         self.tokens = []
         self.current_position = 0
 
@@ -57,9 +56,9 @@ token_patterns = {
     r'\s*KTHXBYE\s*': 'Code Delimiter',
     r'\s*WAZZUP\s+': 'Variable Declaration Delimiter',
     r'\s*BUHBYE\s+': 'Variable Declaration Delimiter',
-    r'\s*TLDR\s+': 'Comment Delimiter',
-    r'\s*OBTW\s+': 'Comment Delimiter',
-    r'((\s*^BTW .*)|( ^BTW .*)|(\s*^OBTW .*)|( ^OBTW .*))': 'Comment Line',
+    r'\s*OBTW\s*': 'Comment Delimiter',
+    r'\s*TLDR\s*': 'Comment Delimiter',
+    r'((\s*^BTW .*)|( ^BTW .*))': 'Comment Line',
     r'\s*I HAS A\s+': 'Variable Declaration',
     r'\s*ITZ\s+': 'Variable Assignment',
     r'\s*R\s+': 'Variable Assignment',
@@ -86,10 +85,10 @@ token_patterns = {
     r'\s*VISIBLE\s+': 'Output Keyword',
     r'\s*\+\s+': 'Output Delimiter',
     r'\s*GIMMEH\s+': 'Input Keyword',
-    r'\s*O\sRLY\?\s+': 'If-then Keyword',
-    r'\s*YA RLY\s+': 'If-then Keyword',
+    r'\s*O\sRLY\?\s*': 'If-then Keyword',
+    r'\s*YA RLY\s*': 'If-then Keyword',
     r'\s*MEBBE\s+': 'If-then Keyword',
-    r'\s*NO WAI\s+': 'If-then Keyword',
+    r'\s*NO WAI\s*': 'If-then Keyword',
     r'\s*OIC\s+': 'If-then Keyword',
     r'\s*WTF\?\s+': 'Switch-Case Keyword',
     r'\s*OMG\s+': 'Switch-Case Keyword',
@@ -117,9 +116,9 @@ token_patterns = {
     r'\s?.*\s?': 'Special Characters'
 }
 
-def lex(filename):
+def lex(str):
     compiled_lex.clear()
-    lexer = LOLLexer(filename)
+    lexer = LOLLexer(str)
     tokens = lexer.tokenize()
     for token in tokens:
         if token.type != "YARN Literal":
@@ -128,16 +127,16 @@ def lex(filename):
             compiled_lex.append([token.value, token.type])
     return compiled_lex
 
-def main():
-    filename = input("Enter the name of the .lol file: ")
-    if not os.path.exists(filename):
-        print(f"Error: The file '{filename}' does not exist.")
-        return
-    tokens = lex(filename)
-    print("Tokenized Output:\n")
-    for token_value, token_type in tokens:
-        print(f"{token_type:>30} : {token_value}")
+# def main():
+#     filename = input("Enter the name of the .lol file: ")
+#     if not os.path.exists(filename):
+#         print(f"Error: The file '{filename}' does not exist.")
+#         return
+#     tokens = lex(filename)
+#     print("Tokenized Output:\n")
+#     for token_value, token_type in tokens:
+#         print(f"{token_type:>30} : {token_value}")
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
 

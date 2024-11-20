@@ -10,28 +10,30 @@ def syntax(text):
     tldr = -1
     syntaxResult = ''
     for line in range(0, len(text.splitlines())):
-        lexeme = lexical.lex(text.splitlines()[line].lstrip().rstrip())
-        if lexeme is not None:
+        line = lexical.lex(text.splitlines()[line].lstrip().rstrip())
+        if line is not None:
             # Remove 'BTW' comment lexemes
-            if ['BTW', 'Comment Delimiter'] in lexeme:
-                lexeme.pop(lexeme.index(['BTW', 'Comment Delimiter'])+1)
-                lexeme.pop(lexeme.index(['BTW', 'Comment Delimiter']))
-            if ['OBTW','Comment Delimiter'] in lexeme:
-                obtw = 1
-                del lexeme[lexeme.index(['OBTW', 'Comment Delimiter']):]
+            index = next((i for i, sublist in enumerate(line) if 'Comment Line' in sublist), -1)
+            if index != -1:
                 continue
             if obtw==1:
-                if ['TLDR','Identifier'] not in lexeme:
-                    lexeme.clear()
+                if ['TLDR','Comment Delimiter'] not in line:
                     continue
-                else:
-                    obtw = 0
+                else:                                                           # OBTW and TLDR has been paired
+                    obtw = 0                                                    
                     tldr = 0
-                    del lexeme[:lexeme.index(['TLDR','Comment Delimiter'])]
-            if ['TLDR', 'Comment Delimiter'] in lexeme:
-                tldr = 1
-                lexeme.pop(lexeme.index(['TLDR', 'Comment Delimiter']))
-            print(f'{lexeme}\n')
+                    del line[:line.index(['TLDR','Comment Delimiter'])]
+            if ['OBTW','Comment Delimiter'] in line:
+                obtw = 1                                                        # OBTW exists in the source code
+                del line[line.index(['OBTW', 'Comment Delimiter']):]
+            if ['TLDR', 'Comment Delimiter'] in line:
+                tldr = 1                                                        # TLDR exists in the source code
+                del line[:line.index(['TLDR', 'Comment Delimiter'])]
+            if len(line)==0:
+                continue
+            # for lexeme in range(0,len(line)): <--- code unfinished 
+                # check for hai
+
 
 def main():
     filename = input("Enter the name of the .lol file: ")
