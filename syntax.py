@@ -49,25 +49,38 @@ def vardec(text, start, i, declared_vars, syntaxResult, obtw, tldr):
 
     return line, declared_vars, syntaxResult
 
-def check_arith_bool_syntax(lexeme, line, syntaxResult, operation_type):
-    if len(lexeme) < 3:
-        syntaxResult += f"syntax error at line {line + 1}: Incomplete {operation_type} operation\n"
+# def check_arith_bool_syntax(lexeme, line, syntaxResult, operation_type):
+#     if len(lexeme) < 3:
+#         syntaxResult += f"syntax error at line {line + 1}: Incomplete {operation_type} operation\n"
+#         return syntaxResult
+
+#     if operation_type == "arithmetic":
+#         if lexeme[1][1] not in ['Identifier', 'Literal'] or lexeme[2][0] != 'AN':
+#             syntaxResult += f"syntax error at line {line + 1}: Invalid arithmetic operation syntax\n"
+    
+#     elif operation_type == "boolean":
+#         if lexeme[1][1] not in ['Identifier', 'Literal']:
+#             syntaxResult += f"syntax error at line {line + 1}: Invalid first operand in boolean operation, must be Identifier or Literal\n"
+#         if lexeme[2][0] != 'AN':
+#             syntaxResult += f"syntax error at line {line + 1}: Missing 'AN' in boolean operation\n"
+#         if len(lexeme) < 4 or lexeme[3][1] not in ['Identifier', 'Literal']:
+#             syntaxResult += f"syntax error at line {line + 1}: Invalid second operand in boolean operation, must be Identifier or Literal\n"
+#         elif lexeme[3][0] in ['BOTH OF', 'EITHER OF', 'WON OF', 'NOT', 'ALL OF', 'ANY OF']:
+#             syntaxResult += f"syntax error at line {line + 1}: Invalid second operand in boolean operation, cannot be another operator\n"
+
+#     return syntaxResult
+
+def casting(lexeme, line, syntaxResult):
+    if lexeme[1][0] == 'R':
+        if lexeme[2][1] not in ['Identifier', 'Literal']:
+            syntaxResult += f"syntax error at line {line + 1}: Invalid assignment value\n"
         return syntaxResult
 
-    if operation_type == "arithmetic":
-        if lexeme[1][1] not in ['Identifier', 'Literal'] or lexeme[2][0] != 'AN':
-            syntaxResult += f"syntax error at line {line + 1}: Invalid arithmetic operation syntax\n"
-    
-    elif operation_type == "boolean":
-        if lexeme[1][1] not in ['Identifier', 'Literal']:
-            syntaxResult += f"syntax error at line {line + 1}: Invalid first operand in boolean operation, must be Identifier or Literal\n"
-        if lexeme[2][0] != 'AN':
-            syntaxResult += f"syntax error at line {line + 1}: Missing 'AN' in boolean operation\n"
-        if len(lexeme) < 4 or lexeme[3][1] not in ['Identifier', 'Literal']:
-            syntaxResult += f"syntax error at line {line + 1}: Invalid second operand in boolean operation, must be Identifier or Literal\n"
-        elif lexeme[3][0] in ['BOTH OF', 'EITHER OF', 'WON OF', 'NOT', 'ALL OF', 'ANY OF']:
-            syntaxResult += f"syntax error at line {line + 1}: Invalid second operand in boolean operation, cannot be another operator\n"
-
+    if lexeme[1][0] == 'MAEK' or lexeme[1][0] == 'IS':
+        if len(lexeme) < 5 or lexeme[2][0] != 'A':
+            syntaxResult += f"syntax error at line {line + 1}: Missing 'A' or incorrect type\n"
+        if lexeme[3][0] not in ['NOOB', 'NUMBR', 'NUMBAR', 'YARN', 'TROOF']:
+            syntaxResult += f"syntax error at line {line + 1}: Invalid type for casting\n"
     return syntaxResult
 
 def syntax(text):
@@ -141,11 +154,12 @@ def syntax(text):
                         break
                     continue
                 # check for arithmetic and boolean operations
-                if lexeme[i][0] in arithmetic_ops:
-                    syntaxResult = check_arith_bool_syntax(lexeme[i:], line, syntaxResult, "arithmetic")
-                elif lexeme[i][0] in boolean_ops:
-                    syntaxResult = check_arith_bool_syntax(lexeme[i:], line, syntaxResult, "boolean")
-                # check for 
+                # if lexeme[i][0] in arithmetic_ops:
+                #     syntaxResult = check_arith_bool_syntax(lexeme[i:], line, syntaxResult, "arithmetic")
+                # elif lexeme[i][0] in boolean_ops:
+                #     syntaxResult = check_arith_bool_syntax(lexeme[i:], line, syntaxResult, "boolean")
+                 if lexeme[i][0] in ['R', 'MAEK', 'IS']:
+                    syntaxResult = casting(lexeme[i:], line, syntaxResult)
     if len(syntaxResult)==0:
         return "syntax correct"
     return syntaxResult
