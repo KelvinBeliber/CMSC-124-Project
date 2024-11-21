@@ -107,6 +107,63 @@ def assignment(lexeme, symbol_table, line, syntaxResult):
         return syntaxResult
     return syntaxResult
 
+def value(lexeme, line, syntaxResult): # varident | <literal> | <expression>
+    valid_literals = ['Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
+    
+    #check if lexeme is a VARIDENT 
+    if lexeme[1][1] == 'Identifier':
+        return syntaxResult  # valid varident (variable identifier)
+    
+    #check if lexeme is a LITERAL
+    elif lexeme[1][1] in valid_literals:
+        return syntaxResult  # valid literal
+    
+    # #check if it's an EXPRESSION
+    # #wala pa to lalagyan pa implementation
+    
+    else:
+        syntaxResult += f"syntax error at line {line + 1}: Invalid value syntax\n"
+        return syntaxResult
+    
+def expression(lexeme, line, syntaxResult): # <operator> | <literal>
+    valid_literals = ['NUMBR Literal', 'NUMBAR Literal', 'YARN Literal', 'TROOF Literal']
+
+    #check if the first element is a valid literal
+    if lexeme[0][1] in valid_literals:
+        return syntaxResult
+    
+    #check if it's an operator
+    #code here
+    
+    syntaxResult += f"syntax error at line {line + 1}: Invalid expression, must be a valid literal or operator\n"
+    
+    return syntaxResult
+
+def operator(lexeme, line, syntaxResult): # <arithmetic> | <boolean> | <comparison> | <concatenation> | <casting>
+    # placeholder for arithmetic operators
+    if lexeme[1][0] in ['SUM OF', 'DIFF OF', 'PRODUKT OF', 'QUOSHUNT OF', 'MOD OF', 'BIGGR OF', 'SMALLR OF']:
+        return syntaxResult  # future logic for arithmetic operators (left as placeholder)
+    
+    # placeholder for boolean operators
+    elif lexeme[1][0] in ['BOTH OF', 'EITHER OF', 'WON OF', 'NOT', 'ALL OF', 'ANY OF']:
+        return syntaxResult  # future logic for boolean operators (left as placeholder)
+
+    # placeholder for comparison operators
+    elif lexeme[1][0] in ['BIGGR OF', 'SMALLR OF', 'EQUAL OF', 'DIFFRINT OF']:
+        return syntaxResult  # future logic for comparison operators (left as placeholder)
+
+    # placeholder for concatenation operators
+    elif lexeme[1][0] in ['JOIN OF']:
+        return syntaxResult  # future logic for concatenation operators (left as placeholder)
+
+    # check for casting 
+    elif lexeme[1][0] in ['R', 'MAEK', 'IS']:
+        return casting(lexeme, line, syntaxResult)
+
+    else:
+        syntaxResult += f"syntax error at line {line + 1}: Invalid operator syntax\n"
+        return syntaxResult
+
 def syntax(text):
     hai = -1
     kthxbye = -1
