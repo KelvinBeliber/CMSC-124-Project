@@ -1,30 +1,53 @@
 import lexical
 import os
 
-def vardec(text, start, i, declared_vars, syntaxResult):
+def comment(lexeme, obtw, tldr):
+    index = next((i for i, sublist in enumerate(lexeme) if 'Comment line' in sublist), -1)
+    if index != -1:
+        lexeme.pop(lexeme.index(index))
+    # print(f'{lexeme}\n') <-- debugging
+    # Remove 'OBTW' & 'TLDR' multi-line comment lexemes
+    if obtw==1:
+        if ['TLDR','Comment Delimiter'] not in lexeme:
+            return True
+        else:                                                           # OBTW and TLDR has been paired
+            obtw = 0                                                    
+            tldr = 0
+            del lexeme[:lexeme.index(['TLDR','Comment Delimiter'])]
+    if ['OBTW','Comment Delimiter'] in lexeme:
+        obtw = 1                                                        # OBTW exists in the source code
+        del lexeme[lexeme.index(['OBTW', 'Comment Delimiter']):]
+    if ['TLDR', 'Comment Delimiter'] in lexeme:
+        tldr = 1                                                        # TLDR exists in the source code
+        del lexeme[:lexeme.index(['TLDR', 'Comment Delimiter'])]
+    if len(lexeme)==0:
+        return True
+    return False
+
+def vardec(text, start, i, declared_vars, syntaxResult, obtw, tldr):
+    literals = ['Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
+    ihasa = 0
     for line in range(start, len(text.splitlines())):
         lexeme = lexical.lex(text.splitlines()[line].lstrip().rstrip())
         if lexeme is not None:
-            index = next((i for i, sublist in enumerate(lexeme) if 'Comment line' in sublist), -1)
-            if index != -1:
+            if lexeme[0][0] == 'I HAS A':
+                var_name = lexeme[1][0]
+                if var_name in declared_vars:
+                    syntaxResult += f"syntax error at line {line + 1}: Variable '{var_name}' already declared\n"
+                    continue
+                if len(lexeme) == 2:
+                    declared_vars.append(var_name)
+                    continue
+                if lexeme[2][0] != 'ITZ':
+                    syntaxResult += f"syntax error at line {line + 1}: Missing ITZ for variable '{lexeme[1][0]}' initialization\n"
+                    continue
+            else:
+                if ['BUHBYE', 'Variable Declaration Delimiter'] in lexeme:
+                    return line, declared_vars, syntaxResult
+                syntaxResult += f"syntax error at line {line + 1}: Incorrect variable declaration syntax\n"
                 continue
-            if ['OBTW', 'Comment Delimiter'] in lexeme:
-                return declared_vars, syntaxResult
-            if ['TLDR', 'Comment Delimiter'] in lexeme:
-                return declared_vars, syntaxResult
 
-            for j in range(len(lexeme)):
-                if lexeme[j][0] == 'I HAS A':
-                    var_name = lexeme[j + 1][0]
-                    if var_name in declared_vars:
-                        syntaxResult += f"syntax error at line {line + 1}: Variable '{var_name}' already declared\n"
-                    else:
-                        declared_vars.append(var_name)
-
-                    if j + 2 < len(lexeme) and lexeme[j + 2][0] != 'ITZ':
-                        syntaxResult += f"syntax error at line {line + 1}: Missing ITZ for variable '{lexeme[j + 1][0]}' initialization\n"
-
-    return declared_vars, syntaxResult
+    return line, declared_vars, syntaxResult
 
 def check_arith_bool_syntax(lexeme, line, syntaxResult, operation_type):
     if len(lexeme) < 3:
@@ -62,32 +85,16 @@ def syntax(text):
     for line in range(0, len(text.splitlines())):
         lexeme = lexical.lex(text.splitlines()[line].lstrip().rstrip())
         if lexeme is not None:
-            # Remove 'BTW' comment lexemes
-            index = next((i for i, sublist in enumerate(lexeme) if 'Comment line' in sublist), -1)
-            if index != -1:
-                continue
-            # print(f'{lexeme}\n') <-- debugging
-            # Remove 'OBTW' & 'TLDR' multi-line comment lexemes
-            if obtw==1:
-                if ['TLDR','Comment Delimiter'] not in lexeme:
-                    continue
-                else:                                                           # OBTW and TLDR has been paired
-                    obtw = 0                                                    
-                    tldr = 0
-                    del lexeme[:lexeme.index(['TLDR','Comment Delimiter'])]
-            if ['OBTW','Comment Delimiter'] in lexeme:
-                obtw = 1                                                        # OBTW exists in the source code
-                del lexeme[lexeme.index(['OBTW', 'Comment Delimiter']):]
-            if ['TLDR', 'Comment Delimiter'] in lexeme:
-                tldr = 1                                                        # TLDR exists in the source code
-                del lexeme[:lexeme.index(['TLDR', 'Comment Delimiter'])]
-            if len(lexeme)==0:
+            # Skip 'BTW' comment lexemes and 'OBTW' 'TLDR' multi line lexemes
+            if comment(lexeme, obtw, tldr)==True:
                 continue
             
             # checking code proper
             for i in range(0,len(lexeme)):
                 # check for hai keyword
-                if lexeme[i][0] == 'HAI' and hai == -1 and kthxbye == -1:
+                if lexeme[i][0] != 'HAI' and hai!=1:
+                    return f'syntax error at line 0: HAI is not declared'
+                if  hai == -1 and kthxbye == -1:
                     hai = 1
                 # check for declaration keyword
                 if lexeme[i][0] == 'WAZZAP' or lexeme[i][0] == 'BUHBYE' and wazzup == 0 and buhbye == 0:
@@ -101,15 +108,16 @@ def syntax(text):
                         syntaxResult += f"syntax error at line {line+1}: WAZZUP cannot be declared after BUHBYE\n"
                         break
                     if wazzup == -1 and buhbye == -1:
-                        vardecResult = vardec(text, line, i, declared_vars, syntaxResult)
-                        declared_vars = vardecResult[0]
-                        syntaxResult = vardecResult[1]
+                        vardecResult = vardec(text, line+1, 0, declared_vars, syntaxResult, obtw, tldr)
+                        line = vardecResult[0]
+                        declared_vars = vardecResult[1]
+                        syntaxResult = vardecResult[2]
                         wazzup = 1
                         continue
                 if lexeme[i][0] == 'BUHBYE':
                     if wazzup != 1:
                         syntaxResult += f"syntax error at line {line+1}: BUHBYE declared without a WAZZUP\n"
-                        break;
+                        break
                     elif buhbye != -1:
                         syntaxResult += f"syntax error at line {line+1}: BUHBYE has already been declared\n"
                         break
@@ -118,14 +126,14 @@ def syntax(text):
                         buhbye = 0
                         continue
                 # printing output
-                # if lexeme[i][0] == 'VISIBLE':
-                #     while(i<len(lexeme)):
-                #         i+=1
-                #         if lexeme[i][1] not in literals or lexeme[i][1] != 'Identifier':
-                #             syntaxResult += f"syntax error at line {line+1}: Incorrect VISIBLE syntax!\n"
-                #             break
-                #     if i>=len(lexeme):
-                #         break
+                if lexeme[i][0] == 'VISIBLE':
+                    while(i<len(lexeme)):
+                        i+=1
+                        if lexeme[i][1] not in literals or lexeme[i][1] != 'Identifier':
+                            syntaxResult += f"syntax error at line {line+1}: Incorrect VISIBLE syntax!\n"
+                            break
+                    if i>=len(lexeme):
+                        break
                 # taking input
                 if lexeme[i][0] == 'GIMMEH':
                     if lexeme[i+1][1] != 'Identifier':
