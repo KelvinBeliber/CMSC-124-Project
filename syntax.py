@@ -158,7 +158,7 @@ def syntax(text):
                 #     syntaxResult = check_arith_bool_syntax(lexeme[i:], line, syntaxResult, "arithmetic")
                 # elif lexeme[i][0] in boolean_ops:
                 #     syntaxResult = check_arith_bool_syntax(lexeme[i:], line, syntaxResult, "boolean")
-                 if lexeme[i][0] in ['R', 'MAEK', 'IS']:
+                if lexeme[i][0] in ['R', 'MAEK', 'IS']:
                     syntaxResult = casting(lexeme[i:], line, syntaxResult)
     if len(syntaxResult)==0:
         return "syntax correct"
