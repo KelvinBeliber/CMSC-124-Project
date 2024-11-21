@@ -87,7 +87,7 @@ def casting(lexeme, line, symbol_table, syntaxResult):
     elif lexeme[1][0] == 'IS NOW A':
         if lexeme[2][0] not in type:
             syntaxResult += f"syntax error at line {line + 1}: Invalid type for casting\n"
-    # put code to recast (execution)
+    # put code to recast (semantics)
     return syntaxResult
 
 def assignment(lexeme, symbol_table, line, syntaxResult):
@@ -106,6 +106,7 @@ def assignment(lexeme, symbol_table, line, syntaxResult):
         syntaxResult += f"syntax error at line {line+1}: Value cannot be assigned to varaible!\n"
         return syntaxResult
     return syntaxResult
+
 
 def value(lexeme, line, syntaxResult): # varident | <literal> | <expression>
     valid_literals = ['Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
@@ -139,10 +140,11 @@ def expression(lexeme, line, syntaxResult): # <operator> | <literal>
     
     return syntaxResult
 
-def operator(lexeme, line, syntaxResult): # <arithmetic> | <boolean> | <comparison> | <concatenation> | <casting>
+
+def operator(lexeme, line, syntaxResult, symbol_table): # <arithmetic> | <boolean> | <comparison> | <concatenation> | <casting>
     # placeholder for arithmetic operators
     if lexeme[1][0] in ['SUM OF', 'DIFF OF', 'PRODUKT OF', 'QUOSHUNT OF', 'MOD OF', 'BIGGR OF', 'SMALLR OF']:
-        return syntaxResult  # future logic for arithmetic operators (left as placeholder)
+        return arithmetic(lexeme, line, syntaxResult)  # future logic for arithmetic operators (left as placeholder)
     
     # placeholder for boolean operators
     elif lexeme[1][0] in ['BOTH OF', 'EITHER OF', 'WON OF', 'NOT', 'ALL OF', 'ANY OF']:
@@ -157,8 +159,8 @@ def operator(lexeme, line, syntaxResult): # <arithmetic> | <boolean> | <comparis
         return syntaxResult  # future logic for concatenation operators (left as placeholder)
 
     # check for casting 
-    elif lexeme[1][0] in ['R', 'MAEK', 'IS']:
-        return casting(lexeme, line, syntaxResult)
+    elif ['MAEK', 'Typecasting Operation'] == lexeme[i] or ['IS NOW A', 'Typecasting Operation'] == lexeme[i]:
+        syntaxResult = casting(lexeme[i:], line, symbol_table, syntaxResult)
 
     else:
         syntaxResult += f"syntax error at line {line + 1}: Invalid operator syntax\n"
@@ -224,6 +226,7 @@ def syntax(text):
                         wazzup = 0
                         buhbye = 0
                         break
+                ## ----------------------------- <statement> tree -------------------------
                 # printing output
                 if lexeme[i][0] == 'VISIBLE':
                     i+=1
@@ -241,10 +244,12 @@ def syntax(text):
                     if lexeme[i+1][1] != 'Identifier':
                         syntaxResult += f"syntax error at line {line+1}: Incorrect GIMMEH syntax!\n"
                         break
-                ## assignment and casting
-                if len(lexeme)>=i+3:
+                if len(lexeme)>=i+3: ## i+3 the smallest assignment and expression statements can be
+                    ## assignment
                     if ['R', 'Variable Assignment'] == lexeme[i+1]:
                         syntaxResult = assignment(lexeme[i:], symbol_table, line, syntaxResult)
+                    ## expression
+                    # expression(lexeme, line, syntaxResult,)
                     elif ['MAEK', 'Typecasting Operation'] == lexeme[i] or ['IS NOW A', 'Typecasting Operation'] == lexeme[i]:
                         syntaxResult = casting(lexeme[i:], line, symbol_table, syntaxResult)
                     break
