@@ -23,6 +23,8 @@ HAI
     y IS NOW A NUMBAR
     VISIBLE 10 AN y
 
+    MAEK y hello
+    y IS NOW A hello
     y R 0
     y R MAEK y TROOF
     VISIBLE y

@@ -126,45 +126,49 @@ def value(lexeme, line, syntaxResult): # varident | <literal> | <expression>
         syntaxResult += f"syntax error at line {line + 1}: Invalid value syntax\n"
         return syntaxResult
     
-def expression(lexeme, line, syntaxResult): # <operator> | <literal>
+def expression(lexeme, line, syntaxResult, symbol_table): # <operator> | <literal>
     valid_literals = ['NUMBR Literal', 'NUMBAR Literal', 'YARN Literal', 'TROOF Literal']
 
     #check if the first element is a valid literal
     if lexeme[0][1] in valid_literals:
         return syntaxResult
+    else:
+        return operator(lexeme, line, syntaxResult, symbol_table)
     
     #check if it's an operator
     #code here
     
-    syntaxResult += f"syntax error at line {line + 1}: Invalid expression, must be a valid literal or operator\n"
-    
     return syntaxResult
 
 
+
 def operator(lexeme, line, syntaxResult, symbol_table): # <arithmetic> | <boolean> | <comparison> | <concatenation> | <casting>
-    # placeholder for arithmetic operators
-    if lexeme[1][0] in ['SUM OF', 'DIFF OF', 'PRODUKT OF', 'QUOSHUNT OF', 'MOD OF', 'BIGGR OF', 'SMALLR OF']:
-        return arithmetic(lexeme, line, syntaxResult)  # future logic for arithmetic operators (left as placeholder)
-    
-    # placeholder for boolean operators
-    elif lexeme[1][0] in ['BOTH OF', 'EITHER OF', 'WON OF', 'NOT', 'ALL OF', 'ANY OF']:
-        return syntaxResult  # future logic for boolean operators (left as placeholder)
+    for i in range(0, len(lexeme)):
+        # placeholder for arithmetic operators
+        if lexeme[1][0] in ['SUM OF', 'DIFF OF', 'PRODUKT OF', 'QUOSHUNT OF', 'MOD OF', 'BIGGR OF', 'SMALLR OF']:
+            return #arithmetic(lexeme, line, syntaxResult)  # future logic for arithmetic operators (left as placeholder)
+        
+        # placeholder for boolean operators
+        elif lexeme[1][0] in ['BOTH OF', 'EITHER OF', 'WON OF', 'NOT', 'ALL OF', 'ANY OF']:
+            return syntaxResult  # future logic for boolean operators (left as placeholder)
 
-    # placeholder for comparison operators
-    elif lexeme[1][0] in ['BIGGR OF', 'SMALLR OF', 'EQUAL OF', 'DIFFRINT OF']:
-        return syntaxResult  # future logic for comparison operators (left as placeholder)
+        # placeholder for comparison operators
+        elif lexeme[1][0] in ['BIGGR OF', 'SMALLR OF', 'EQUAL OF', 'DIFFRINT OF']:
+            return syntaxResult  # future logic for comparison operators (left as placeholder)
 
-    # placeholder for concatenation operators
-    elif lexeme[1][0] in ['JOIN OF']:
-        return syntaxResult  # future logic for concatenation operators (left as placeholder)
+        # placeholder for concatenation operators
+        elif lexeme[1][0] in ['JOIN OF']:
+            syntaxResult # future logic for concatenation operators (left as placeholder)
+            break
 
-    # check for casting 
-    elif ['MAEK', 'Typecasting Operation'] == lexeme[i] or ['IS NOW A', 'Typecasting Operation'] == lexeme[i]:
-        syntaxResult = casting(lexeme[i:], line, symbol_table, syntaxResult)
-
-    else:
-        syntaxResult += f"syntax error at line {line + 1}: Invalid operator syntax\n"
-        return syntaxResult
+        # check for casting 
+        elif ['MAEK', 'Typecasting Operation'] == lexeme[i] or ['IS NOW A', 'Typecasting Operation'] == lexeme[i+1]:
+            syntaxResult = casting(lexeme[i:], line, symbol_table, syntaxResult)
+            break
+        else:
+            syntaxResult += f"syntax error at line {line + 1}: Invalid operator syntax\n"
+            break
+    return syntaxResult
 
 def syntax(text):
     hai = -1
@@ -238,20 +242,19 @@ def syntax(text):
                     break
                 # taking input
                 if lexeme[i][0] == 'GIMMEH':
-                    if len(lexeme) > 2:
+                    if len(lexeme) > 2 or len(lexeme) <= 1:
                         syntaxResult += f"syntax error at line {line+1}: Incorrect GIMMEH syntax!\n"
                         break
                     if lexeme[i+1][1] != 'Identifier':
                         syntaxResult += f"syntax error at line {line+1}: Incorrect GIMMEH syntax!\n"
                         break
-                if len(lexeme)>=i+3: ## i+3 the smallest assignment and expression statements can be
+                if len(lexeme[i:])>=i+3: ## i+3 the smallest assignment and expression statements can be
                     ## assignment
                     if ['R', 'Variable Assignment'] == lexeme[i+1]:
                         syntaxResult = assignment(lexeme[i:], symbol_table, line, syntaxResult)
+                        break
                     ## expression
-                    # expression(lexeme, line, syntaxResult,)
-                    elif ['MAEK', 'Typecasting Operation'] == lexeme[i] or ['IS NOW A', 'Typecasting Operation'] == lexeme[i]:
-                        syntaxResult = casting(lexeme[i:], line, symbol_table, syntaxResult)
+                    syntaxResult = expression(lexeme, line, syntaxResult, symbol_table)
                     break
 
     if len(syntaxResult)==0:
