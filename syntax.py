@@ -102,8 +102,11 @@ def assignment(lexeme, symbol_table, line, syntaxResult):
     if lexeme[1][0] != 'R':
         syntaxResult += f"syntax error at line {line+1}: Invalid declaration, missing 'R'!\n"
         return syntaxResult
+    if ['MAEK', 'Typecasting Operation'] == lexeme[2] or ['IS NOW A', 'Typecasting Operation'] == lexeme[2]:
+        syntaxResult = casting(lexeme[2:], line, symbol_table, syntaxResult)
+        return syntaxResult
     if lexeme[2][1] not in literals:
-        syntaxResult += f"syntax error at line {line+1}: Value cannot be assigned to varaible!\n"
+        syntaxResult += f"syntax error at line {line+1}: Value cannot be assigned to variable!\n"
         return syntaxResult
     return syntaxResult
 
@@ -134,11 +137,6 @@ def expression(lexeme, line, syntaxResult, symbol_table): # <operator> | <litera
         return syntaxResult
     else:
         return operator(lexeme, line, syntaxResult, symbol_table)
-    
-    #check if it's an operator
-    #code here
-    
-    return syntaxResult
 
 
 
@@ -160,11 +158,8 @@ def operator(lexeme, line, syntaxResult, symbol_table): # <arithmetic> | <boolea
         elif lexeme[1][0] in ['JOIN OF']:
             syntaxResult # future logic for concatenation operators (left as placeholder)
             break
-
-        # check for casting 
-        elif ['MAEK', 'Typecasting Operation'] == lexeme[i] or ['IS NOW A', 'Typecasting Operation'] == lexeme[i+1]:
-            syntaxResult = casting(lexeme[i:], line, symbol_table, syntaxResult)
-            break
+        
+        # no operator match
         else:
             syntaxResult += f"syntax error at line {line + 1}: Invalid operator syntax\n"
             break
@@ -238,6 +233,8 @@ def syntax(text):
                         if lexeme[i][1] not in literals:
                             syntaxResult += f"syntax error at line {line+1}: Incorrect VISIBLE syntax!\n"
                             break
+                        else:
+                            syntaxResult = expression(lexeme, line, syntaxResult, symbol_table)
                         i+=1
                     break
                 # taking input
@@ -252,9 +249,12 @@ def syntax(text):
                     ## assignment
                     if ['R', 'Variable Assignment'] == lexeme[i+1]:
                         syntaxResult = assignment(lexeme[i:], symbol_table, line, syntaxResult)
-                        break
+                    ## check for casting 
+                    elif ['MAEK', 'Typecasting Operation'] == lexeme[i] or ['IS NOW A', 'Typecasting Operation'] == lexeme[i+1]:
+                        syntaxResult = casting(lexeme[i:], line, symbol_table, syntaxResult)
                     ## expression
-                    syntaxResult = expression(lexeme, line, syntaxResult, symbol_table)
+                    else:
+                        syntaxResult = expression(lexeme, line, syntaxResult, symbol_table)
                     break
 
     if len(syntaxResult)==0:

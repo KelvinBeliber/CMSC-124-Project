@@ -4,7 +4,7 @@ HAI
         I HAS A x
         I HAS A y
     BUHBYE
-    a
+    
     VISIBLE "Hello! Please enter two strings:"
     VISIBLE "String 1: "
     GIMMEH x
@@ -23,8 +23,6 @@ HAI
     y IS NOW A NUMBAR
     VISIBLE 10 AN y
 
-    MAEK y hello
-    y IS NOW A hello
     y R 0
     y R MAEK y TROOF
     VISIBLE y
