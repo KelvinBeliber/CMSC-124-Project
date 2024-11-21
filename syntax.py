@@ -26,6 +26,26 @@ def vardec(text, start, i, declared_vars, syntaxResult):
 
     return declared_vars, syntaxResult
 
+def check_arith_bool_syntax(lexeme, line, syntaxResult, operation_type):
+    if len(lexeme) < 3:
+        syntaxResult += f"syntax error at line {line + 1}: Incomplete {operation_type} operation\n"
+        return syntaxResult
+
+    if operation_type == "arithmetic":
+        if lexeme[1][1] not in ['Identifier', 'Literal'] or lexeme[2][0] != 'AN':
+            syntaxResult += f"syntax error at line {line + 1}: Invalid arithmetic operation syntax\n"
+    
+    elif operation_type == "boolean":
+        if lexeme[1][1] not in ['Identifier', 'Literal']:
+            syntaxResult += f"syntax error at line {line + 1}: Invalid first operand in boolean operation, must be Identifier or Literal\n"
+        if lexeme[2][0] != 'AN':
+            syntaxResult += f"syntax error at line {line + 1}: Missing 'AN' in boolean operation\n"
+        if len(lexeme) < 4 or lexeme[3][1] not in ['Identifier', 'Literal']:
+            syntaxResult += f"syntax error at line {line + 1}: Invalid second operand in boolean operation, must be Identifier or Literal\n"
+        elif lexeme[3][0] in ['BOTH OF', 'EITHER OF', 'WON OF', 'NOT', 'ALL OF', 'ANY OF']:
+            syntaxResult += f"syntax error at line {line + 1}: Invalid second operand in boolean operation, cannot be another operator\n"
+
+    return syntaxResult
 
 def syntax(text):
     hai = -1
@@ -110,6 +130,11 @@ def syntax(text):
                         syntaxResult += f"syntax error at line {line+1}: Incorrect GIMMEH syntax!\n"
                         break
                     continue
+                # check for arithmetic and boolean operations
+                if lexeme[i][0] in arithmetic_ops:
+                    syntaxResult = check_arith_bool_syntax(lexeme[i:], line, syntaxResult, "arithmetic")
+                elif lexeme[i][0] in boolean_ops:
+                    syntaxResult = check_arith_bool_syntax(lexeme[i:], line, syntaxResult, "boolean")
                 # check for 
     if len(syntaxResult)==0:
         return "syntax correct"
