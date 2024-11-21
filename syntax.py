@@ -80,7 +80,6 @@ def casting(lexeme, line, symbol_table, syntaxResult):
         if lexeme[1][1] != 'Identifier':
             syntaxResult += f"syntax error at line {line + 1}: No variable to typecast!\n"
         if lexeme[1][0] not in symbol_table:
-            
             syntaxResult += f"syntax error at line {line + 1}: Variable was not declared!\n"
         if lexeme[2][0] not in type:
             syntaxResult += f"syntax error at line {line + 1}: Invalid type for casting\n"
@@ -115,7 +114,8 @@ def value(lexeme, line, syntaxResult): # varident | <literal> | <expression>
     valid_literals = ['Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
     
     #check if lexeme is a VARIDENT 
-    if lexeme[1][1] == 'Identifier':
+    if lexeme[0][1] == 'Identifier':
+
         return syntaxResult  # valid varident (variable identifier)
     
     #check if lexeme is a LITERAL
@@ -130,39 +130,133 @@ def value(lexeme, line, syntaxResult): # varident | <literal> | <expression>
         return syntaxResult
     
 def expression(lexeme, line, syntaxResult, symbol_table): # <operator> | <literal>
-    valid_literals = ['NUMBR Literal', 'NUMBAR Literal', 'YARN Literal', 'TROOF Literal']
-
+    literals = ['NUMBR Literal', 'NUMBAR Literal', 'YARN Literal', 'TROOF Literal']
     #check if the first element is a valid literal
-    if lexeme[0][1] in valid_literals:
+    if lexeme[0][1] in literals:
         return syntaxResult
     else:
         return operator(lexeme, line, syntaxResult, symbol_table)
 
-
-
 def operator(lexeme, line, syntaxResult, symbol_table): # <arithmetic> | <boolean> | <comparison> | <concatenation> | <casting>
     for i in range(0, len(lexeme)):
         # placeholder for arithmetic operators
-        if lexeme[1][0] in ['SUM OF', 'DIFF OF', 'PRODUKT OF', 'QUOSHUNT OF', 'MOD OF', 'BIGGR OF', 'SMALLR OF']:
-            return #arithmetic(lexeme, line, syntaxResult)  # future logic for arithmetic operators (left as placeholder)
+        if lexeme[0][0] in ['SUM OF', 'DIFF OF', 'PRODUKT OF', 'QUOSHUNT OF', 'MOD OF', 'BIGGR OF', 'SMALLR OF']:
+            return arithmetic(lexeme, line, syntaxResult, symbol_table)  # future logic for arithmetic operators (left as placeholder)
         
-        # placeholder for boolean operators
-        elif lexeme[1][0] in ['BOTH OF', 'EITHER OF', 'WON OF', 'NOT', 'ALL OF', 'ANY OF']:
-            return syntaxResult  # future logic for boolean operators (left as placeholder)
+    #     # placeholder for boolean operators
+    #     elif lexeme[1][0] in ['BOTH OF', 'EITHER OF', 'WON OF', 'NOT', 'ALL OF', 'ANY OF']:
+    #         return syntaxResult  # future logic for boolean operators (left as placeholder)
 
-        # placeholder for comparison operators
-        elif lexeme[1][0] in ['BIGGR OF', 'SMALLR OF', 'EQUAL OF', 'DIFFRINT OF']:
-            return syntaxResult  # future logic for comparison operators (left as placeholder)
+    #     # placeholder for comparison operators
+    #     elif lexeme[0][0] in ['BOTH SAEM', 'DIFFRINT']:
+    #         return syntaxResult  # future logic for comparison operators (left as placeholder)
 
-        # placeholder for concatenation operators
-        elif lexeme[1][0] in ['JOIN OF']:
-            syntaxResult # future logic for concatenation operators (left as placeholder)
-            break
+    #     # placeholder for concatenation operators
+    #     elif lexeme[1][0] in ['JOIN OF']:
+    #         syntaxResult # future logic for concatenation operators (left as placeholder)
+    #         break
         
-        # no operator match
+    #     # no operator match
         else:
-            syntaxResult += f"syntax error at line {line + 1}: Invalid operator syntax\n"
-            break
+            if i==len(lexeme)+1:
+                syntaxResult += f"syntax error at line {line + 1}: Invalid syntax\n"
+                break
+    return syntaxResult
+
+def arithmetic(lexeme, line, syntaxResult, symbol_table):
+    literals = ['NUMBR Literal', 'NUMBAR Literal', 'YARN Literal', 'TROOF Literal']
+    if len(lexeme) < 4:  # Minimum length for valid arithmetic operation
+        syntaxResult += f"syntax error at line {line + 1}: Incomplete arithmetic operation\n"
+        return syntaxResult
+
+    valid_operators = ['SUM OF', 'DIFF OF', 'PRODUKT OF', 'QUOSHUNT OF', 'MOD OF', 'BIGGR OF', 'SMALLR OF']
+    if lexeme[0][0] not in valid_operators:
+        syntaxResult += f"syntax error at line {line + 1}: Invalid arithmetic operator '{lexeme[0][0]}'\n"
+        return syntaxResult
+
+    if lexeme[1][1] not in ['Identifier', literals]:
+        syntaxResult = expression(lexeme, line, syntaxResult, symbol_table)
+        syntaxResult += f"syntax error at line {line + 1}: Invalid first operand in arithmetic operation, must be Identifier, Literal or an expression\n"
+        
+    if lexeme[2][0] != 'AN':
+        syntaxResult += f"syntax error at line {line + 1}: Missing 'AN' keyword in arithmetic operation\n"
+
+    if len(lexeme) < 4 or lexeme[3][1] not in ['Identifier', literals]:
+        syntaxResult = expression(lexeme, line, syntaxResult, symbol_table)
+        syntaxResult += f"syntax error at line {line + 1}: Invalid second operand in arithmetic operation, must be Identifier, Literal or an expression\n"
+
+    return syntaxResult
+
+def comparison(lexeme, line, syntaxResult, symbol_table):
+    type = ['NOOB', 'NUMBR', 'NUMBAR', 'YARN', 'TROOF']
+    if lexeme[0][1] == 'Identifier':
+        syntaxResult += f"syntax error at line {line + 1}: Invalid operator syntax\n"
+    else:
+        syntaxResult = expression(lexeme, line, syntaxResult, symbol_table)
+    # put code to recast (semantics)
+    return syntaxResult
+
+def boolean(lexeme, line, syntaxResult): 
+    valid_boolean_ops = ['BOTH OF', 'EITHER OF', 'WON OF', 'NOT', 'ALL OF', 'ANY OF']
+
+    if lexeme[0][0] == 'NOT':
+        # NOT operation requires a single operand
+        if len(lexeme) < 2: 
+            if lexeme[1][1] not in ['Identifier', 'Literal']:
+                syntaxResult += f"syntax error at line {line + 1}: NOT operation requires a valid operand\n"
+            else:
+                expression(lexeme, line, syntaxResult)
+        return syntaxResult
+
+    if lexeme[0][0] not in valid_boolean_ops:
+        syntaxResult += f"syntax error at line {line + 1}: Invalid boolean operator '{lexeme[0][0]}'\n"
+        return syntaxResult
+
+    if len(lexeme) < 4:
+        syntaxResult += f"syntax error at line {line + 1}: Incomplete boolean operation\n"
+        return syntaxResult
+
+    if lexeme[1][1] not in ['Identifier', 'Literal']:
+        syntaxResult += f"syntax error at line {line + 1}: Invalid first operand in boolean operation, must be Identifier or Literal\n"
+
+    if lexeme[2][0] != 'AN':
+        syntaxResult += f"syntax error at line {line + 1}: Missing 'AN' keyword in boolean operation\n"
+
+    if len(lexeme) < 4 or lexeme[3][1] not in ['Identifier', 'Literal']:
+        syntaxResult += f"syntax error at line {line + 1}: Invalid second operand in boolean operation, must be Identifier or Literal\n"
+
+    return syntaxResult
+
+def visible(lexeme, line, syntaxResult, symbol_table):
+    literals = ['Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
+    skip = 0
+    for i in range(0,len(lexeme)):
+        if skip>0:
+            skip-=1
+            continue
+        if (i+1)%2 == 1:
+            if lexeme[i][1] in literals:
+                continue
+            if lexeme[i][1] in 'Identifier':
+                var_name = lexeme[i][0]
+                if var_name in symbol_table:
+                    continue
+                syntaxResult += f"syntax error at line {line + 1}: Variable '{var_name}' not declared\n"
+                break
+            temp = len(syntaxResult)
+            syntaxResult = expression(lexeme, line, syntaxResult, symbol_table)
+            if(temp<len(syntaxResult)):
+                syntaxResult += f"syntax error at line {line+1}: Incorrect VISIBLE syntax!\n"
+                break
+            j=i
+            while lexeme[j][0]!='AN':
+                skip += 1
+                j+=1
+        else:
+            print(f'{line+1}:{i+1}:{lexeme[i]} <--- visible function\n')
+            if lexeme[i][0] != 'AN':
+                syntaxResult += f"syntax error at line {line+1}: Incorrect concatenation of VISIBLE arguments!\n"
+                break
     return syntaxResult
 
 def syntax(text):
@@ -172,7 +266,6 @@ def syntax(text):
     buhbye = -1
     obtw = -1
     tldr = -1
-    visible = 0
     symbol_table = []
     syntaxResult = ''
     skip = 0
@@ -225,17 +318,10 @@ def syntax(text):
                         wazzup = 0
                         buhbye = 0
                         break
-                ## ----------------------------- <statement> tree -------------------------
+                ## ----------------------------- <statement> tree -----------------------------
                 # printing output
                 if lexeme[i][0] == 'VISIBLE':
-                    i+=1
-                    while(i<len(lexeme)):
-                        if lexeme[i][1] not in literals:
-                            syntaxResult += f"syntax error at line {line+1}: Incorrect VISIBLE syntax!\n"
-                            break
-                        else:
-                            syntaxResult = expression(lexeme, line, syntaxResult, symbol_table)
-                        i+=1
+                    syntaxResult = visible(lexeme[i+1:], line, syntaxResult, symbol_table)
                     break
                 # taking input
                 if lexeme[i][0] == 'GIMMEH':
