@@ -175,6 +175,7 @@ def syntax(text):
                             break
                     assign = 1
                     continue
+<<<<<<< HEAD
                 if lexeme[i][0] == 'R':
                     if assign != 1:
                         syntaxResult+= f"syntax error at line {line+1}: Missing variable to assign to!\n"
@@ -192,6 +193,15 @@ def syntax(text):
                         assign = 0
                         break
 
+=======
+                # check for arithmetic and boolean operations
+                # if lexeme[i][0] in arithmetic_ops:
+                #     syntaxResult = check_arith_bool_syntax(lexeme[i:], line, syntaxResult, "arithmetic")
+                # elif lexeme[i][0] in boolean_ops:
+                #     syntaxResult = check_arith_bool_syntax(lexeme[i:], line, syntaxResult, "boolean")
+                if lexeme[i][0] in ['R', 'MAEK', 'IS']:
+                    syntaxResult = casting(lexeme[i:], line, syntaxResult)
+>>>>>>> ad21fa5a5f2e9a0bd3587bbdbb74f4a4e9876d95
     if len(syntaxResult)==0:
         return "syntax correct"
     return syntaxResult
