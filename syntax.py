@@ -2,10 +2,10 @@ import lexical
 import os
 
 def comment(lexeme, obtw, tldr):
-    index = next((i for i, sublist in enumerate(lexeme) if 'Comment line' in sublist), -1)
+    # Remove 'BTW' comment lexemes
+    index = next((i for i, sublist in enumerate(lexeme) if 'Comment Line' in sublist), -1)
     if index != -1:
-        lexeme.pop(lexeme.index(index))
-    # print(f'{lexeme}\n') <-- debugging
+        lexeme.pop(index)
     # Remove 'OBTW' & 'TLDR' multi-line comment lexemes
     if obtw==1:
         if ['TLDR','Comment Delimiter'] not in lexeme:
@@ -24,62 +24,66 @@ def comment(lexeme, obtw, tldr):
         return True
     return False
 
-def vardec(text, start, i, declared_vars, syntaxResult, obtw, tldr):
-    literals = ['Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
-    ihasa = 0
+def vardec(text, start, i, symbol_table, syntaxResult, obtw, tldr):
+    literals = ['Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal'] ## for saving values
     for line in range(start, len(text.splitlines())):
         lexeme = lexical.lex(text.splitlines()[line].lstrip().rstrip())
+        if comment(lexeme, obtw, tldr)==True:
+            continue
         if lexeme is not None:
             if lexeme[0][0] == 'I HAS A':
                 var_name = lexeme[1][0]
-                if var_name in declared_vars:
+                if var_name in symbol_table:
                     syntaxResult += f"syntax error at line {line + 1}: Variable '{var_name}' already declared\n"
                     continue
                 if len(lexeme) == 2:
-                    declared_vars.append(var_name)
+                    symbol_table.append(var_name)
                     continue
                 if lexeme[2][0] != 'ITZ':
                     syntaxResult += f"syntax error at line {line + 1}: Missing ITZ for variable '{lexeme[1][0]}' initialization\n"
                     continue
+                else:
+                    if lexeme[3][1] not in ['NOOB', 'NUMBR', 'NUMBAR', 'YARN', 'TROOF']:
+                        syntaxResult += f"syntax error at line {line + 1}: Missing Type for ITZ '{lexeme[1][0]}' initialization\n"
+                        continue
             else:
                 if ['BUHBYE', 'Variable Declaration Delimiter'] in lexeme:
-                    return line, declared_vars, syntaxResult
+                    return line, symbol_table, syntaxResult
                 syntaxResult += f"syntax error at line {line + 1}: Incorrect variable declaration syntax\n"
                 continue
 
-    return line, declared_vars, syntaxResult
+    return line, symbol_table, syntaxResult
 
-# def check_arith_bool_syntax(lexeme, line, syntaxResult, operation_type):
-#     if len(lexeme) < 3:
-#         syntaxResult += f"syntax error at line {line + 1}: Incomplete {operation_type} operation\n"
-#         return syntaxResult
+def check_operator_syntax(lexeme, line, syntaxResult, operation_type):
+    if len(lexeme) < 3:
+        syntaxResult += f"syntax error at line {line + 1}: Incomplete {operation_type} operation\n"
+        return syntaxResult
 
-#     if operation_type == "arithmetic":
-#         if lexeme[1][1] not in ['Identifier', 'Literal'] or lexeme[2][0] != 'AN':
-#             syntaxResult += f"syntax error at line {line + 1}: Invalid arithmetic operation syntax\n"
+    if operation_type == "arithmetic":
+        if lexeme[1][1] not in ['Identifier', 'Literal'] or lexeme[2][0] != 'AN':
+            syntaxResult += f"syntax error at line {line + 1}: Invalid arithmetic operation syntax\n"
     
-#     elif operation_type == "boolean":
-#         if lexeme[1][1] not in ['Identifier', 'Literal']:
-#             syntaxResult += f"syntax error at line {line + 1}: Invalid first operand in boolean operation, must be Identifier or Literal\n"
-#         if lexeme[2][0] != 'AN':
-#             syntaxResult += f"syntax error at line {line + 1}: Missing 'AN' in boolean operation\n"
-#         if len(lexeme) < 4 or lexeme[3][1] not in ['Identifier', 'Literal']:
-#             syntaxResult += f"syntax error at line {line + 1}: Invalid second operand in boolean operation, must be Identifier or Literal\n"
-#         elif lexeme[3][0] in ['BOTH OF', 'EITHER OF', 'WON OF', 'NOT', 'ALL OF', 'ANY OF']:
-#             syntaxResult += f"syntax error at line {line + 1}: Invalid second operand in boolean operation, cannot be another operator\n"
-
-#     return syntaxResult
+    elif operation_type == "boolean":
+        if lexeme[1][1] not in ['Identifier', 'Literal']:
+            syntaxResult += f"syntax error at line {line + 1}: Invalid first operand in boolean operation, must be Identifier or Literal\n"
+        if lexeme[2][0] != 'AN':
+            syntaxResult += f"syntax error at line {line + 1}: Missing 'AN' in boolean operation\n"
+        if len(lexeme) < 4 or lexeme[3][1] not in ['Identifier', 'Literal']:
+            syntaxResult += f"syntax error at line {line + 1}: Invalid second operand in boolean operation, must be Identifier or Literal\n"
+        elif lexeme[3][0] in ['BOTH OF', 'EITHER OF', 'WON OF', 'NOT', 'ALL OF', 'ANY OF']:
+            syntaxResult += f"syntax error at line {line + 1}: Invalid second operand in boolean operation, cannot be another operator\n"
+    return syntaxResult
 
 def casting(lexeme, line, syntaxResult):
     if lexeme[1][0] == 'R':
         if lexeme[2][1] not in ['Identifier', 'Literal']:
             syntaxResult += f"syntax error at line {line + 1}: Invalid assignment value\n"
-        return syntaxResult
-
-    if lexeme[1][0] == 'MAEK' or lexeme[1][0] == 'IS':
-        if len(lexeme) < 5 or lexeme[2][0] != 'A':
-            syntaxResult += f"syntax error at line {line + 1}: Missing 'A' or incorrect type\n"
-        if lexeme[3][0] not in ['NOOB', 'NUMBR', 'NUMBAR', 'YARN', 'TROOF']:
+            return syntaxResult
+        if lexeme[1][0] == 'MAEK':
+            if lexeme[3][0] not in ['NOOB', 'NUMBR', 'NUMBAR', 'YARN', 'TROOF']:
+                syntaxResult += f"syntax error at line {line + 1}: Invalid type for casting\n"
+    elif lexeme[1][0] == 'IS NOW A':
+        if lexeme[2][0] not in ['NOOB', 'NUMBR', 'NUMBAR', 'YARN', 'TROOF']:
             syntaxResult += f"syntax error at line {line + 1}: Invalid type for casting\n"
     return syntaxResult
 
@@ -90,8 +94,11 @@ def syntax(text):
     buhbye = -1
     obtw = -1
     tldr = -1
-    declared_vars = []
+    assign = 0
+    visible = 0
+    symbol_table = []
     syntaxResult = ''
+    types = ['NOOB', 'NUMBR', 'NUMBAR', 'YARN', 'TROOF']
     literals = ['Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
     arithmetic_ops = ['SUM OF', 'DIFF OF', 'PRODUKT OF', 'QUOSHUNT OF', 'MOD OF', 'BIGGR OF', 'SMALLR OF']
     boolean_ops = ['BOTH OF', 'EITHER OF', 'WON OF', 'NOT', 'ALL OF', 'ANY OF']
@@ -101,7 +108,7 @@ def syntax(text):
             # Skip 'BTW' comment lexemes and 'OBTW' 'TLDR' multi line lexemes
             if comment(lexeme, obtw, tldr)==True:
                 continue
-            
+            print(f"{lexeme}\n")
             # checking code proper
             for i in range(0,len(lexeme)):
                 # check for hai keyword
@@ -121,9 +128,9 @@ def syntax(text):
                         syntaxResult += f"syntax error at line {line+1}: WAZZUP cannot be declared after BUHBYE\n"
                         break
                     if wazzup == -1 and buhbye == -1:
-                        vardecResult = vardec(text, line+1, 0, declared_vars, syntaxResult, obtw, tldr)
+                        vardecResult = vardec(text, line+1, 0, symbol_table, syntaxResult, obtw, tldr)
                         line = vardecResult[0]
-                        declared_vars = vardecResult[1]
+                        symbol_table = vardecResult[1]
                         syntaxResult = vardecResult[2]
                         wazzup = 1
                         continue
@@ -140,30 +147,54 @@ def syntax(text):
                         continue
                 # printing output
                 if lexeme[i][0] == 'VISIBLE':
+                    i+=1
                     while(i<len(lexeme)):
-                        i+=1
-                        if lexeme[i][1] not in literals or lexeme[i][1] != 'Identifier':
+                        if lexeme[i][1] not in literals:
                             syntaxResult += f"syntax error at line {line+1}: Incorrect VISIBLE syntax!\n"
                             break
-                    if i>=len(lexeme):
-                        break
+                        i+=1
+                    break
                 # taking input
                 if lexeme[i][0] == 'GIMMEH':
+                    if len(lexeme) > 2:
+                        syntaxResult += f"syntax error at line {line+1}: Incorrect GIMMEH syntax!\n"
+                        break
                     if lexeme[i+1][1] != 'Identifier':
                         syntaxResult += f"syntax error at line {line+1}: Incorrect GIMMEH syntax!\n"
                         break
+                ## assignment and casting
+                if lexeme[i][1] == 'Identifier':
+                    if assign == 2:
+                        var_name = lexeme[i][0]
+                        if var_name not in symbol_table:
+                            syntaxResult += f"syntax error at line {line+1}: Variable not declared!\n"
+                            break
+                        else:
+                            symbol_table.append(var_name)
+                            assign = 0
+                            break
+                    assign = 1
                     continue
-                # check for arithmetic and boolean operations
-                # if lexeme[i][0] in arithmetic_ops:
-                #     syntaxResult = check_arith_bool_syntax(lexeme[i:], line, syntaxResult, "arithmetic")
-                # elif lexeme[i][0] in boolean_ops:
-                #     syntaxResult = check_arith_bool_syntax(lexeme[i:], line, syntaxResult, "boolean")
-                 if lexeme[i][0] in ['R', 'MAEK', 'IS']:
-                    syntaxResult = casting(lexeme[i:], line, syntaxResult)
+                if lexeme[i][0] == 'R':
+                    if assign != 1:
+                        syntaxResult+= f"syntax error at line {line+1}: Missing variable to assign to!\n"
+                        break
+                    else: 
+                        assign=2
+                        continue
+                if lexeme[i][1] in literals:
+                    if assign != 2:
+                        syntaxResult+= f"syntax error at line {line+1}: Incorrect Assignment syntax!\n"
+                        break
+                    else:
+                        var_name = lexeme[i][0]
+                        symbol_table.append(var_name)
+                        assign = 0
+                        break
+
     if len(syntaxResult)==0:
         return "syntax correct"
     return syntaxResult
-
 
 def main():
     filename = input("Enter the name of the .lol file: ")

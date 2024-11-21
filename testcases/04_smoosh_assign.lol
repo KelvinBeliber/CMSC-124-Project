@@ -4,7 +4,7 @@ HAI
         I HAS A x
         I HAS A y
     BUHBYE
-    
+    a
     VISIBLE "Hello! Please enter two strings:"
     VISIBLE "String 1: "
     GIMMEH x
