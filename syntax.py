@@ -57,6 +57,8 @@ def syntax(text):
     declared_vars = []
     syntaxResult = ''
     literals = ['Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
+    arithmetic_ops = ['SUM OF', 'DIFF OF', 'PRODUKT OF', 'QUOSHUNT OF', 'MOD OF', 'BIGGR OF', 'SMALLR OF']
+    boolean_ops = ['BOTH OF', 'EITHER OF', 'WON OF', 'NOT', 'ALL OF', 'ANY OF']
     for line in range(0, len(text.splitlines())):
         lexeme = lexical.lex(text.splitlines()[line].lstrip().rstrip())
         if lexeme is not None:
