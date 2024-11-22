@@ -6,8 +6,6 @@ HAI
     BUHBYE
 
     GIMMEH monde
-    MAEK hi YARN
-    hi R "HELLO"
     VISIBLE SUM OF monde AN num
     VISIBLE monde
 
