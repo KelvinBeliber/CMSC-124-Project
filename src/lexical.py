@@ -101,7 +101,7 @@ token_patterns = {
     r'\s*WILE\s+': 'Loop Keyword',
     r'\s*IM OUTTA YR\s+': 'Loop Keyword',
     r'\s*HOW IZ I\s+': 'Function Keyword',
-    r'\s*IF U SAY SO\s+': 'Function Keyword',
+    r'\s*IF U SAY SO\s*': 'Function Keyword',
     r'\s*GTFO\s+': 'Return Keyword',
     r'\s*FOUND YR\s+': 'Return Keyword',
     r'\s*I IZ\s+': 'Function Call',

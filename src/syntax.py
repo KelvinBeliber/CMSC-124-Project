@@ -34,6 +34,7 @@ def syntax(text):
             if comment(lexeme, obtw, tldr)==True:
                 continue
             if skip>0:
+                print(line+1, skip)
                 skip-=1
                 continue
             # checking code proper
@@ -43,7 +44,8 @@ def syntax(text):
             if  hai == -1 and kthxbye == -1:
                 hai = 1
             # check for declaration keyword
-            if lexeme[0][0] == 'WAZZAP' or lexeme[0][0] == 'BUHBYE' and wazzup == 0 and buhbye == 0:
+            if (lexeme[0][0] == 'WAZZUP' or lexeme[0][0] == 'BUHBYE') and wazzup == 0 and buhbye == 0:
+                print(lexeme)
                 return f"syntax error at line {line+1}: WAZZUP-BUHBYE block has already been declared\n"
             if lexeme[0][0] == 'WAZZUP':
                 if wazzup != -1:
@@ -72,7 +74,8 @@ def syntax(text):
                     continue
             ## ----------------------------- statement tree -----------------------------
             if lexeme[0][0] == 'HOW IZ I':
-                syntaxResult = function(text, line, syntaxResult, symbol_table)
+                skip, syntaxResult = function(text, line, syntaxResult, symbol_table, obtw, tldr)
+                skip -= line
                 continue
             elif lexeme[0][0] == 'WTF?':
                 skip, syntaxResult = wtf_switch(text, line, syntaxResult, symbol_table, obtw, tldr)
