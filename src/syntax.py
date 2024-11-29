@@ -9,6 +9,10 @@ from syntax_funcs.operators import operator
 
 from syntax_funcs.statement import statement
 
+from syntax_funcs.func import function
+
+from syntax_funcs.switch import wtf_switch
+
 def syntax(text):
     hai = -1
     kthxbye = -1
@@ -67,6 +71,12 @@ def syntax(text):
                     buhbye = 0
                     continue
             ## ----------------------------- statement tree -----------------------------
+            if lexeme[0][0] == 'HOW IZ I':
+                syntaxResult = function(text, line, syntaxResult, symbol_table)
+                continue
+            elif lexeme[0][0] == 'WTF?':
+                skip, syntaxResult = wtf_switch(text, line, syntaxResult, symbol_table, obtw, tldr)
+                continue
             syntaxResult = statement(lexeme, line, syntaxResult, symbol_table)
     if len(syntaxResult)==0:
         return "syntax correct"

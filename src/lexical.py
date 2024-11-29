@@ -90,7 +90,7 @@ token_patterns = {
     r'\s*MEBBE\s+': 'If-then Keyword',
     r'\s*NO WAI\s*': 'If-then Keyword',
     r'\s*OIC\s+': 'If-then Keyword',
-    r'\s*WTF\?\s+': 'Switch-Case Keyword',
+    r'\s*WTF\?\s*': 'Switch-Case Keyword',
     r'\s*OMG\s+': 'Switch-Case Keyword',
     r'\s*OMGWTF\s+': 'Switch-Case Keyword',
     r'\s*IM IN YR\s+': 'Loop Keyword',
