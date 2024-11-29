@@ -6,4 +6,4 @@ HAI
         I HAS A fnum ITZ 17.0
         I HAS A flag ITZ WIN
     BUHBYE
-    GIMMEH BTW
+    VISIBLE
