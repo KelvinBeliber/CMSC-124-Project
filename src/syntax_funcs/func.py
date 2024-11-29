@@ -1,3 +1,5 @@
+from statement import statement
+
 def function(lexeme, line, syntaxResult, symbol_table, index=0):
     def func_def(lexeme, line, syntaxResult, symbol_table, index):
         # HOW IZ I
