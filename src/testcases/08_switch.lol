@@ -32,6 +32,7 @@ HAI
 			GTFO
 		OMG 0
 			VISIBLE "Goodbye"
+			GTFO
 		OMGWTF
 			VISIBLE "Invalid Input!"
 	OIC

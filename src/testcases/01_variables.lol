@@ -13,7 +13,7 @@ HAI
         I HAS A prod ITZ PRODUKT OF 3 AN 4
         I HAS A quo ITZ QUOSHUNT OF 4 AN 5
     BUHBYE
-
+    
     BTW print literals and variables
     VISIBLE "declarations"
     VISIBLE monde BTW should be NOOB

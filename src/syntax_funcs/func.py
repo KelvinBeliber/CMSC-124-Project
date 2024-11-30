@@ -1,16 +1,24 @@
 import lexical
-from syntax_funcs.comment import comment
+from syntax_funcs.comment import btw_comment
+from syntax_funcs.comment import obtw_comment
 from syntax_funcs.statement import statement
 from syntax_funcs.statement import expression
 
-def func_arg(lexeme, line, syntaxResult):
+def func_def_arg(lexeme, line, syntaxResult):
     index = 0
+    multi_comment_found = False
+    function_table = {}
     while index < len(lexeme):
         # Validate operand
         if lexeme[index][1] != 'Identifier':
-            print(lexeme, "\n", lexeme[index], index)
             syntaxResult += f"syntax error at line {line + 1}: Invalid function argument\n"
             break
+        else:
+            var_name = lexeme[index][0]
+            if var_name in function_table:
+                syntaxResult += f"syntax error at line {line + 1}: Variable '{var_name}' already declared\n"
+                break
+            function_table[var_name] = ''
         index += 1
 
         # Check if there's an 'AN' keyword after each operand except the last
@@ -26,16 +34,19 @@ def func_arg(lexeme, line, syntaxResult):
                 break
             index += 2  # Move past 'AN'
 
-    return syntaxResult
+    return syntaxResult, function_table
 
-def function(text, start, syntaxResult, symbol_table, obtw, tldr):
+def func_def(text, start, syntaxResult, function_table):
     # Variables to track the function state
     function_start_found = False
     gtfo_found = False
     foundyr_found = False
-    parameters = []
     function_name = None
     inside_function = False
+    multi_comment = False
+    comment_line_count = 0
+    local_symbol_table = {}
+    function_code = {}
     
     def is_gtfo(lexeme):
         return lexeme[0][0] == 'GTFO'
@@ -49,7 +60,6 @@ def function(text, start, syntaxResult, symbol_table, obtw, tldr):
     
     # check function declaration
     lexeme = lexical.lex(text.splitlines()[start].strip())
-
     if len(lexeme) < 2:
         syntaxResult += f"syntax error at line {start + 1}: Incorrect format for function definition\n"
         return start, syntaxResult
@@ -62,44 +72,56 @@ def function(text, start, syntaxResult, symbol_table, obtw, tldr):
             syntaxResult += f"syntax error at line {start + 1}: Incorrect function declaration syntax\n"
             return line, syntaxResult
         temp = syntaxResult
-        syntaxResult = func_arg(lexeme[3:], start, syntaxResult)
+        syntaxResult, local_symbol_table = func_def_arg(lexeme[3:], start, syntaxResult)
         if len(temp) < len(syntaxResult):  # Syntax error occurred
             return start, syntaxResult
     # Main processing of the function block
     for line in range(start+1, len(text.splitlines())):
         lexeme = lexical.lex(text.splitlines()[line].strip())
-        if comment(lexeme, obtw, tldr):
+        ## comment skipping
+        lexeme = btw_comment(lexeme)
+        if len(lexeme) == 0:
             continue
-        print(lexeme[0][0])
+        if lexeme[0] == ['OBTW', 'Comment Delimiter'] or lexeme[0] == ['TLDR', 'Comment Delimiter']:
+            multi_comment = obtw_comment(syntaxResult, lexeme, line, len(text.splitlines()), multi_comment)
+            if type(multi_comment) == str:
+                syntaxResult += multi_comment
+                break
+        if multi_comment or lexeme[0] == ['TLDR', 'Comment Delimiter']:
+            comment_line_count+=1
+            continue
         # Check for GTFO 
         if is_gtfo(lexeme):
             # Check if there is at least one OMG or OMGWTF case before ending
             if is_found_yr(lexeme):
                 syntaxResult += f"syntax error at line {line + 1}: 'GTFO' cannot be declared after 'FOUND YR' declaration\n"
-                return line, syntaxResult
+                return syntaxResult, None
             gtfo_found = True
+            function_code[line+1] = lexeme[0:]
             continue
 
         if is_found_yr(lexeme):
             if is_gtfo(lexeme):
                 syntaxResult += f"syntax error at line {line + 1}: 'GTFO' cannot be declared after 'FOUND YR' declaration\n"
-                return line, syntaxResult
+                return syntaxResult, None
             foundyr_found = True
+            function_code[line+1] = lexeme[0:]
             continue
 
         if is_if_u_say_so(lexeme):
             if not gtfo_found and not foundyr_found:
                 syntaxResult += f"syntax error at line {line + 1}: 'IF U SAY SO' cannot be declared without a 'FOUND YR' pr 'GTFO' declaration\n"
-                return line, syntaxResult
-            return line, syntaxResult
+                return syntaxResult, None
+            function_table[function_name] = {'local_symbol_table': local_symbol_table, 'function_code': function_code}
+            return syntaxResult, line-comment_line_count
 
         # Process statements inside the function body
         if not gtfo_found and not foundyr_found:
             temp = syntaxResult
-            syntaxResult = statement(lexeme, line, syntaxResult, symbol_table)
+            syntaxResult = statement(lexeme, line, syntaxResult, local_symbol_table, function_table)
             if len(temp) < len(syntaxResult):  # Syntax error occurred
-                return line, syntaxResult
-            inside_function = True
+                return syntaxResult, None
+            function_code[line+1] = lexeme[0:]
             continue
 
 

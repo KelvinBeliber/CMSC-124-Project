@@ -1,7 +1,8 @@
 import lexical
 import os
 
-from syntax_funcs.comment import comment
+from syntax_funcs.comment import btw_comment
+from syntax_funcs.comment import obtw_comment
 
 from syntax_funcs.wazzupblock import vardec
 
@@ -9,7 +10,7 @@ from syntax_funcs.operators import operator
 
 from syntax_funcs.statement import statement
 
-from syntax_funcs.func import function
+from syntax_funcs.func import func_def
 
 from syntax_funcs.switch import wtf_switch
 
@@ -18,9 +19,9 @@ def syntax(text):
     kthxbye = -1
     wazzup = -1
     buhbye = -1
-    obtw = -1
-    tldr = -1
-    symbol_table = []
+    multi_comment = False
+    symbol_table = {'IT':None}
+    function_table = {}
     syntaxResult = ''
     skip = 0
     types = ['NOOB', 'NUMBR', 'NUMBAR', 'YARN', 'TROOF']
@@ -30,8 +31,16 @@ def syntax(text):
     for line in range(0, len(text.splitlines())):
         lexeme = lexical.lex(text.splitlines()[line].lstrip().rstrip())
         if lexeme is not None:
-            # Skip 'BTW' comment lexemes and 'OBTW' 'TLDR' multi line lexemes
-            if comment(lexeme, obtw, tldr)==True:
+            ## comment skipping
+            lexeme = btw_comment(lexeme)
+            if len(lexeme) == 0:
+                continue
+            if lexeme[0] == ['OBTW', 'Comment Delimiter'] or lexeme[0] == ['TLDR', 'Comment Delimiter']:
+                multi_comment = obtw_comment(syntaxResult, lexeme, line, len(text.splitlines()), multi_comment)
+                if type(multi_comment) == str:
+                    syntaxResult += multi_comment
+                    break
+            if multi_comment or lexeme[0] == ['TLDR', 'Comment Delimiter']:
                 continue
             if skip>0:
                 skip-=1
@@ -42,9 +51,16 @@ def syntax(text):
                 return f'syntax error at line 0: HAI is not declared'
             if  hai == -1 and kthxbye == -1:
                 hai = 1
+                continue
+            if lexeme[0][0] == 'KTHXBYE':
+                if hai != 1:
+                    return f"syntax error at line {line+1}: KTHXBYE declared without a HAI\n"
+                else:
+                    if len(lexeme) > 1:
+                        return f"syntax error at line {line+1}: Incorrect KTHXBYE syntax\n"
+                    break
             # check for declaration keyword
             if (lexeme[0][0] == 'WAZZUP' or lexeme[0][0] == 'BUHBYE') and wazzup == 0 and buhbye == 0:
-                print(lexeme)
                 return f"syntax error at line {line+1}: WAZZUP-BUHBYE block has already been declared\n"
             if lexeme[0][0] == 'WAZZUP':
                 if wazzup != -1:
@@ -54,12 +70,13 @@ def syntax(text):
                 if wazzup == -1 and buhbye == -1:
                     if len(lexeme) > 1:
                         return f"syntax error at line {line+1}: Incorrect WAZZUP syntax\n"
-                    vardecResult = vardec(text, line+1, 0, symbol_table, syntaxResult, obtw, tldr)
-                    skip = vardecResult[0]-line
-                    symbol_table = vardecResult[1]
-                    syntaxResult = vardecResult[2]
+                    syntaxResult, symbol_table, skip = vardec(text, line+1, symbol_table, syntaxResult)
+                    if not skip and not symbol_table:
+                        break
+                    skip -= line
                     wazzup = 1
                     continue
+
             if lexeme[0][0] == 'BUHBYE':
                 if wazzup != 1:
                     return f"syntax error at line {line+1}: BUHBYE declared without a WAZZUP\n"
@@ -73,13 +90,29 @@ def syntax(text):
                     continue
             ## ----------------------------- statement tree -----------------------------
             if lexeme[0][0] == 'HOW IZ I':
-                skip, syntaxResult = function(text, line, syntaxResult, symbol_table, obtw, tldr)
+                syntaxResult, skip = func_def(text, line, syntaxResult, function_table)
+                if not skip:
+                    break
                 skip -= line
                 continue
-            elif lexeme[0][0] == 'WTF?':
-                skip, syntaxResult = wtf_switch(text, line, syntaxResult, symbol_table, obtw, tldr)
+            elif lexeme[0][0] == 'WTF?' and possible_switch:
+                syntaxResult, skip = wtf_switch(text, line, syntaxResult, symbol_table, function_table)
+                if not skip:
+                    break
+                skip -= line
                 continue
-            syntaxResult = statement(lexeme, line, syntaxResult, symbol_table)
+            if lexeme[0][1]=='Identifier' and len(lexeme)==1:
+                possible_switch = True
+                continue
+            temp = syntaxResult
+            syntaxResult = statement(lexeme, line, syntaxResult, symbol_table, function_table)
+            if len(temp) < len(syntaxResult):
+                break
+    ## debugging: tracking symbols and defined functions
+    # for key in symbol_table:
+    #     print(f'{key}: {symbol_table[key]}')
+    # for key in function_table:
+    #     print(f'{key}: {function_table[key]}')
     if len(syntaxResult)==0:
         return "syntax correct"
     return syntaxResult

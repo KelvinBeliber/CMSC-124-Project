@@ -1,14 +1,74 @@
 from syntax_funcs.operators import operator
 
+def func_call_arg(lexeme, line, function_table, symbol_table, syntaxResult):
+    operators = [
+        'SUM OF', 'DIFF OF', 'PRODUKT OF', 'QUOSHUNT OF', 'MOD OF', 'BIGGR OF', 'SMALLR OF',
+        'BOTH OF', 'EITHER OF', 'WON OF', 'NOT', 'ALL OF', 'ANY OF',
+        'BOTH SAEM', 'DIFFRINT',
+        'SMOOSH'
+    ]
+    literals = ['Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
+    def is_valid_expression(lexeme, index, syntaxResult):
+        """Helper function to validate an arithmetic or logical expression."""
+        if lexeme[index][0] in operators:  # Check for nested expressions
+            syntaxResult, end_index = operator(lexeme, line, syntaxResult, symbol_table, index)
+            if not end_index:
+                return syntaxResult, None
+            return syntaxResult, end_index
+        elif lexeme[index][1] in literals or lexeme[index][1] == 'Identifier':  # Check for literals or identifiers
+            var_name = lexeme[index][0]
+            if lexeme[index][1] == 'Identifier' and var_name not in symbol_table:
+                syntaxResult += f"syntax error at line {line + 1}: Variable '{var_name}' not declared\n"
+                return syntaxResult, None
+            return syntaxResult, index + 1  # Move to next index
+        else:
+            return syntaxResult, None
+
+    index = 1
+    if lexeme[index][0] not in function_table:
+        return f"syntax error at line {line + 1}: the function called does not exist\n"
+    if lexeme[index+1][0] != 'YR':
+        return f"syntax error at line {line + 1}: Incorrect function call syntax\n"
+    index+=2
+    while index < len(lexeme):
+        # Validate operand
+        syntaxResult, next_index = is_valid_expression(lexeme, index, syntaxResult)
+        if not next_index:
+            syntaxResult += f"syntax error at line {line + 1}: Invalid argument in function declaration\n"
+            break
+        index = next_index
+
+        # Check if there's an 'AN' keyword after each operand except the last
+        if index < len(lexeme):
+            if index+1>=len(lexeme):
+                syntaxResult += f"syntax error at line {line + 1}: Expected 'YR' after 'AN' in function declaration\n"
+                break
+            if lexeme[index][0] != 'AN' or lexeme[index+1][0] != 'YR':
+                syntaxResult += f"syntax error at line {line + 1}: Missing or incorrect 'AN' keyword in function arguments\n"
+                break
+            if index+2>=len(lexeme):
+                syntaxResult += f"syntax error at line {line + 1}: Insufficient function arguments\n"
+                break
+            index += 2  # Move past 'AN'
+
+    return syntaxResult
+
 def casting(lexeme, line, symbol_table, syntaxResult):
     type = ['NOOB', 'NUMBR', 'NUMBAR', 'YARN', 'TROOF']
-    if lexeme[0][0] == 'MAEK':
-        if lexeme[1][1] != 'Identifier':
+    index = 0
+    print(lexeme)
+    if lexeme[index][0] == 'MAEK':
+        index+=1
+        if lexeme[index] == ['A','Typecasting Operation']:
+            index+=1
+        if lexeme[index][1] != 'Identifier':
             syntaxResult += f"syntax error at line {line + 1}: No variable to typecast!\n"
-        if lexeme[1][0] not in symbol_table:
+        if lexeme[index][0] not in symbol_table:
             syntaxResult += f"syntax error at line {line + 1}: Variable was not declared!\n"
-        if lexeme[2][0] not in type:
+        index+=1
+        if lexeme[index][0] not in type:
             syntaxResult += f"syntax error at line {line + 1}: Invalid type for casting\n"
+        index+=1
     elif lexeme[1][0] == 'IS NOW A':
         if lexeme[2][0] not in type:
             syntaxResult += f"syntax error at line {line + 1}: Invalid type for casting\n"
@@ -109,7 +169,7 @@ def visible(lexeme, line, syntaxResult, symbol_table):
 
     return syntaxResult
 
-def statement(lexeme, line, syntaxResult, symbol_table):
+def statement(lexeme, line, syntaxResult, symbol_table, function_table):
         # printing output
     if lexeme[0][0] == 'VISIBLE':
         return visible(lexeme[1:], line, syntaxResult, symbol_table)
@@ -121,6 +181,11 @@ def statement(lexeme, line, syntaxResult, symbol_table):
         if lexeme[1][1] != 'Identifier':
             return syntaxResult + f"syntax error at line {line+1}: Incorrect GIMMEH syntax!\n"
         return syntaxResult  # Correct GIMMEH syntax
+    
+    if lexeme[0][0] == 'I IZ':
+        if len(lexeme) < 4:
+             return syntaxResult + f"syntax error at line {line+1}: Incorrect 'I IZ' syntax!\n"
+        return func_call_arg(lexeme, line, function_table, symbol_table, syntaxResult)
 
     # handle assignment, casting, and expressions
     if len(lexeme) >= 3:  # assignment or expression has at least 3 tokens
@@ -135,5 +200,6 @@ def statement(lexeme, line, syntaxResult, symbol_table):
         # expression
         else:
             return expression(lexeme, line, syntaxResult, symbol_table)[0]
-    
+
+    syntaxResult += f"syntax error at line {line + 1}: Unexpected syntax\n"
     return syntaxResult

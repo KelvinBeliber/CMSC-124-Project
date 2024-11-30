@@ -1,22 +1,20 @@
-def comment(lexeme, obtw, tldr):
-    # Remove 'BTW' comment lexemes
+def btw_comment(lexeme):
     index = next((i for i, sublist in enumerate(lexeme) if 'Comment Line' in sublist), -1)
     if index != -1:
         lexeme.pop(index)
-    # Remove 'OBTW' & 'TLDR' multi-line comment lexemes
-    if obtw==1:
-        if ['TLDR','Comment Delimiter'] not in lexeme:
-            return True
-        else:                                                           # OBTW and TLDR has been paired
-            obtw = 0                                                    
-            tldr = 0
-            del lexeme[:lexeme.index(['TLDR','Comment Delimiter'])]
-    if ['OBTW','Comment Delimiter'] in lexeme:
-        obtw = 1                                                        # OBTW exists in the source code
-        del lexeme[lexeme.index(['OBTW', 'Comment Delimiter']):]
-    if ['TLDR', 'Comment Delimiter'] in lexeme:
-        tldr = 1                                                        # TLDR exists in the source code
-        del lexeme[:lexeme.index(['TLDR', 'Comment Delimiter'])]
-    if len(lexeme)==0:
+    return lexeme
+
+def obtw_comment(syntaxResult, lexeme, line, code_length, multi_comment):
+    if lexeme[0] == ['OBTW', 'Comment Delimiter']:
+        if line == code_length-1:
+            syntaxResult += f'syntax error at {line+1}: Multi Comment line never enclosed\n'
+            return syntaxResult
         return True
-    return False
+    else:
+        if len(lexeme) > 1:
+            syntaxResult += f'syntax error at {line+1}: Cannot place code right after declaring TLDR on the same line\n'
+            return syntaxResult
+        if multi_comment == False:
+            syntaxResult += f'syntax error at {line+1}: OBTW was never declared\n'
+            return syntaxResult
+        return False

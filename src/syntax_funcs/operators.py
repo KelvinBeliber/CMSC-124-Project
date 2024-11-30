@@ -7,27 +7,28 @@ def operator(lexeme, line, syntaxResult, symbol_table, index=0):
         'SMOOSH'
     ]
 
+    def is_valid_expression(lexeme, index, syntaxResult):
+        """Helper function to validate an arithmetic or logical expression."""
+        if lexeme[index][0] in operators:  # Check for nested operators
+            temp = syntaxResult
+            syntaxResult, next_index = operator(lexeme, line, syntaxResult, symbol_table, index)
+            if not next_index:  # Syntax error occurred
+                return syntaxResult, None
+            return syntaxResult, next_index # no error
+        elif lexeme[index][1] in literals or lexeme[index][1] == 'Identifier':  # Check for literals or identifiers
+            var_name = lexeme[index][0]
+            if lexeme[index][1] == 'Identifier' and var_name not in symbol_table:
+                syntaxResult += f"syntax error at line {line + 1}: Variable '{var_name}' not declared\n"
+                return syntaxResult, None
+            return syntaxResult, index + 1  # Move to next index
+        else:
+            return syntaxResult, None # Invalid operand
+
     def comparison(lexeme, line, syntaxResult, symbol_table, index):
-        def is_valid_expression(lexeme, index, syntaxResult):
-            """Helper function to validate an arithmetic or logical expression."""
-            if lexeme[index][0] in operators:  # Check for nested operators
-                temp = syntaxResult
-                syntaxResult, next_index = operator(lexeme, line, syntaxResult, symbol_table, index)
-                if len(temp) < len(syntaxResult):  # Syntax error occurred
-                    return False, syntaxResult, next_index
-                return True, syntaxResult, next_index
-            elif lexeme[index][1] in literals or lexeme[index][1] == 'Identifier':  # Check for literals or identifiers
-                var_name = lexeme[index][0]
-                if lexeme[index][1] == 'Identifier' and var_name not in symbol_table:
-                    syntaxResult += f"syntax error at line {line + 1}: Variable '{var_name}' not declared\n"
-                    return False, syntaxResult, index
-                return True, syntaxResult, index + 1  # Move to next index
-            else:
-                return False, syntaxResult, index
         # Check for BOTH SAEM or DIFFRINT keyword
         if lexeme[index][0] not in ['BOTH SAEM', 'DIFFRINT']:
             syntaxResult += f"syntax error at line {line + 1}: Expected boolean comparison operator\n"
-            return syntaxResult, index + 1
+            return syntaxResult, None
 
         comparison_type = lexeme[index][0]  # Save comparison type (BOTH SAEM / DIFFRINT)
         index += 1  # Move to the first operand
@@ -35,24 +36,24 @@ def operator(lexeme, line, syntaxResult, symbol_table, index=0):
         # Validate the first operand
         if index >= len(lexeme):
             syntaxResult += f"syntax error at line {line + 1}: Missing first operand in comparison\n"
-            return syntaxResult, index
+            return syntaxResult, None
 
-        is_valid, syntaxResult, next_index = is_valid_expression(lexeme, index, syntaxResult)
-        if not is_valid:
+        syntaxResult, next_index = is_valid_expression(lexeme, index, syntaxResult)
+        if not next_index:
             syntaxResult += f"syntax error at line {line + 1}: Invalid operand in {comparison_type} expression\n"
-            return syntaxResult, index
+            return syntaxResult, None
         index = next_index
 
         # Check for 'AN' keyword
         if index >= len(lexeme) or lexeme[index][0] != 'AN':
             syntaxResult += f"syntax error at line {line + 1}: Missing 'AN' after first operand\n"
-            return syntaxResult, index
+            return syntaxResult, None
         index += 1  # Move past 'AN'
 
         # Validate the second operand (supports BIGGR OF and SMALLR OF)
         if index >= len(lexeme):
             syntaxResult += f"syntax error at line {line + 1}: Missing second operand in comparison\n"
-            return syntaxResult, index
+            return syntaxResult, None
 
         if lexeme[index][0] in ['BIGGR OF', 'SMALLR OF']:
             # Handle nested arithmetic expression (BIGGR OF / SMALLR OF)
@@ -62,39 +63,39 @@ def operator(lexeme, line, syntaxResult, symbol_table, index=0):
             # Validate first operand of BIGGR OF / SMALLR OF
             if index >= len(lexeme):
                 syntaxResult += f"syntax error at line {line + 1}: Missing first operand for '{nested_operator}'\n"
-                return syntaxResult, index
+                return syntaxResult, None
             if lexeme[index][1] == 'Identifier' and lexeme[index][0] not in symbol_table:
                 syntaxResult += f"syntax error at line {line + 1}: Variable '{lexeme[index][0]}' not declared\n"
-                return syntaxResult, index
+                return syntaxResult, None
             elif lexeme[index][1] not in literals and lexeme[index][1] != 'Identifier':
                 syntaxResult += f"syntax error at line {line + 1}: Invalid operand for '{nested_operator}'\n"
-                return syntaxResult, index
+                return syntaxResult, None
             index += 1
 
             # Check for 'AN' keyword
             if index >= len(lexeme) or lexeme[index][0] != 'AN':
                 syntaxResult += f"syntax error at line {line + 1}: Missing 'AN' keyword in '{nested_operator}'\n"
-                return syntaxResult, index
+                return syntaxResult, None
             index += 1  # Move past 'AN'
 
             # Validate second operand of BIGGR OF / SMALLR OF
             if index >= len(lexeme):
                 syntaxResult += f"syntax error at line {line + 1}: Missing second operand for '{nested_operator}'\n"
-                return syntaxResult, index
+                return syntaxResult, None
             if lexeme[index][1] == 'Identifier' and lexeme[index][0] not in symbol_table:
                 syntaxResult += f"syntax error at line {line + 1}: Variable '{lexeme[index][0]}' not declared\n"
-                return syntaxResult, index
+                return syntaxResult, None
             elif lexeme[index][1] not in literals and lexeme[index][1] != 'Identifier':
                 syntaxResult += f"syntax error at line {line + 1}: Invalid operand for '{nested_operator}'\n"
-                return syntaxResult, index
+                return syntaxResult, None
             index += 1
 
         else:
             # Validate second operand directly (non-nested case)
-            is_valid, syntaxResult, next_index = is_valid_expression(lexeme, index, syntaxResult)
-            if not is_valid:
+            syntaxResult, next_index = is_valid_expression(lexeme, index, syntaxResult)
+            if not next_index:
                 syntaxResult += f"syntax error at line {line + 1}: Invalid operand in {comparison_type} expression\n"
-                return syntaxResult, index
+                return syntaxResult, None
             index = next_index
 
         # Successfully parsed comparison
@@ -102,23 +103,6 @@ def operator(lexeme, line, syntaxResult, symbol_table, index=0):
 
 
     def boolean(lexeme, line, syntaxResult, symbol_table, index):
-        def is_valid_expression(lexeme, index, syntaxResult):
-            """Helper function to validate an arithmetic or logical expression."""
-            if lexeme[index][0] in operators:  # Check for nested operators
-                temp = syntaxResult
-                syntaxResult, next_index = operator(lexeme, line, syntaxResult, symbol_table, index)
-                if len(temp) < len(syntaxResult):  # Syntax error occurred
-                    return False, syntaxResult, next_index
-                return True, syntaxResult, next_index
-            elif lexeme[index][1] in literals or lexeme[index][1] == 'Identifier':  # Check for literals or identifiers
-                var_name = lexeme[index][0]
-                if lexeme[index][1] == 'Identifier' and var_name not in symbol_table:
-                    syntaxResult += f"syntax error at line {line + 1}: Variable '{var_name}' not declared\n"
-                    return False, syntaxResult, index
-                return True, syntaxResult, index + 1  # Move to next index
-            else:
-                return False, syntaxResult, index
-
         boolType = lexeme[index][0]
         index += 1  # Move past the operator
 
@@ -133,8 +117,8 @@ def operator(lexeme, line, syntaxResult, symbol_table, index=0):
                     return syntaxResult, index + 1  # Move past MKAY
 
                 # Validate each operand
-                is_valid, syntaxResult, next_index = is_valid_expression(lexeme, index, syntaxResult)
-                if not is_valid:
+                syntaxResult, next_index = is_valid_expression(lexeme, index, syntaxResult)
+                if not next_index:
                     syntaxResult += f"syntax error at line {line + 1}: Invalid operand in {boolType} expression\n"
                     return syntaxResult, index
                 index = next_index
@@ -153,8 +137,8 @@ def operator(lexeme, line, syntaxResult, symbol_table, index=0):
 
         # Handle NOT operator
         elif boolType == 'NOT':
-            is_valid, syntaxResult, next_index = is_valid_expression(lexeme, index, syntaxResult)
-            if not is_valid:
+            syntaxResult, next_index = is_valid_expression(lexeme, index, syntaxResult)
+            if not next_index:
                 syntaxResult += f"syntax error at line {line + 1}: Invalid operand in NOT expression\n"
                 return syntaxResult, index
             index = next_index
@@ -166,8 +150,8 @@ def operator(lexeme, line, syntaxResult, symbol_table, index=0):
                     syntaxResult += f"syntax error at line {line + 1}: Missing operand in {boolType} expression\n"
                     return syntaxResult, index
 
-                is_valid, syntaxResult, next_index = is_valid_expression(lexeme, index, syntaxResult)
-                if not is_valid:
+                syntaxResult, next_index = is_valid_expression(lexeme, index, syntaxResult)
+                if not next_index:
                     syntaxResult += f"syntax error at line {line + 1}: Invalid operand in {boolType} expression\n"
                     return syntaxResult, index
                 index = next_index
@@ -191,13 +175,13 @@ def operator(lexeme, line, syntaxResult, symbol_table, index=0):
         # Simplified Arithmetic Implementation
         if lexeme[index][0] not in operators[:7]:  # Check for arithmetic operators
             syntaxResult += f"syntax error at line {line + 1}: Invalid arithmetic operator '{lexeme[index][0]}'\n"
-            return syntaxResult, index + 1
+            return syntaxResult, None
 
         index += 1  # Move to first operand
         for i in range(2):  # Two operands expected
             if index >= len(lexeme) or lexeme[index][0] == 'AN':
                 syntaxResult += f"syntax error at line {line + 1}: Incomplete arithmetic expression\n"
-                return syntaxResult, index
+                return syntaxResult, None
 
             if lexeme[index][1] in literals or lexeme[index][1] == 'Identifier':
                 var_name = lexeme[index][0]
@@ -220,39 +204,26 @@ def operator(lexeme, line, syntaxResult, symbol_table, index=0):
         # Simplified SMOOSH Implementation
         if lexeme[index][0] != 'SMOOSH':
             syntaxResult += f"syntax error at line {line + 1}: Expected 'SMOOSH'\n"
-            return syntaxResult, index + 1
+            return syntaxResult, None
 
         index += 1
-        def is_valid_expression(lexeme, index, syntaxResult):
-            """Helper function to validate an arithmetic or logical expression."""
-            if lexeme[index][0] in operators:  # Check for nested expressions
-                syntaxResult, end_index = operator(lexeme, line, syntaxResult, symbol_table, index)
-                return True, syntaxResult, end_index
-            elif lexeme[index][1] in literals or lexeme[index][1] == 'Identifier':  # Check for literals or identifiers
-                var_name = lexeme[index][0]
-                if lexeme[index][1] == 'Identifier' and var_name not in symbol_table:
-                    syntaxResult += f"syntax error at line {line + 1}: Variable '{var_name}' not declared\n"
-                    return False, syntaxResult, index
-                return True, syntaxResult, index + 1  # Move to next index
-            else:
-                return False, syntaxResult, index
             
         while index < len(lexeme):
             # Validate operand
-            is_valid, syntaxResult, next_index = is_valid_expression(lexeme, index, syntaxResult)
-            if not is_valid:
+            syntaxResult, next_index = is_valid_expression(lexeme, index, syntaxResult)
+            if not next_index:
                 syntaxResult += f"syntax error at line {line + 1}: Invalid operand in SMOOSH expression\n"
-                return syntaxResult, index
+                return syntaxResult, None
             index = next_index
 
             # Check if there's an 'AN' keyword after each operand except the last
             if index < len(lexeme):
                 if lexeme[index][0] != 'AN':
                     syntaxResult += f"syntax error at line {line + 1}: Missing or incorrect 'AN' keyword in SMOOSH arguments\n"
-                    return syntaxResult, index
+                    return syntaxResult, None
                 if index+1>=len(lexeme):
                     syntaxResult += f"syntax error at line {line + 1}: Insufficient SMOOSH arguments\n"
-                    return syntaxResult, index
+                    return syntaxResult, None
                 index += 1  # Move past 'AN'
                 
         return syntaxResult, index
@@ -268,4 +239,4 @@ def operator(lexeme, line, syntaxResult, symbol_table, index=0):
         return comparison(lexeme, line, syntaxResult, symbol_table, index)
     else:
         syntaxResult += f"syntax error at line {line + 1}: Unknown operator '{lexeme[index][0]}'\n"
-        return syntaxResult, index + 1
+        return syntaxResult, None
