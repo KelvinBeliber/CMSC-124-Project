@@ -3,16 +3,7 @@ from syntax_funcs.comment import comment
 from syntax_funcs.statement import statement
 from syntax_funcs.statement import expression
 
-def func_arg(lexeme, line, syntaxResult, symbol_table):
-    literals = ['Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
-    operators = [
-        'SUM OF', 'DIFF OF', 'PRODUKT OF', 'QUOSHUNT OF', 'MOD OF', 'BIGGR OF', 'SMALLR OF',
-        'BOTH OF', 'EITHER OF', 'WON OF', 'NOT', 'ALL OF', 'ANY OF',
-        'BOTH SAEM', 'DIFFRINT',
-        'SMOOSH'
-    ]
-
-
+def func_arg(lexeme, line, syntaxResult):
     index = 0
     while index < len(lexeme):
         # Validate operand
@@ -24,10 +15,13 @@ def func_arg(lexeme, line, syntaxResult, symbol_table):
 
         # Check if there's an 'AN' keyword after each operand except the last
         if index < len(lexeme):
+            if index+1>=len(lexeme):
+                syntaxResult += f"syntax error at line {line + 1}: Expected 'YR' after 'AN' in function declaration\n"
+                break
             if lexeme[index][0] != 'AN' or lexeme[index+1][0] != 'YR':
                 syntaxResult += f"syntax error at line {line + 1}: Missing or incorrect 'AN' keyword in function arguments\n"
                 break
-            if index+1>=len(lexeme):
+            if index+2>=len(lexeme):
                 syntaxResult += f"syntax error at line {line + 1}: Insufficient function arguments\n"
                 break
             index += 2  # Move past 'AN'
@@ -37,101 +31,78 @@ def func_arg(lexeme, line, syntaxResult, symbol_table):
 def function(text, start, syntaxResult, symbol_table, obtw, tldr):
     # Variables to track the function state
     function_start_found = False
+    gtfo_found = False
+    foundyr_found = False
     parameters = []
     function_name = None
     inside_function = False
-
-    # Helper function to check if it's the start of a HOW IZ I function definition
-    def is_valid_how_iz_i_start(lexeme):
-        return lexeme[0][0] == 'HOW IZ I'
-
-    # Helper function to check for the YR keyword (for parameters)
-    def is_yr(lexeme):
-        return lexeme[0][0] == 'YR'
-
-    # Helper function to check for the AN YR keyword (for multiple parameters)
-    def is_an_yr(lexeme):
-        return lexeme[0][0] == 'AN YR'
-
-    # Helper function to check for the FOUND YR keyword (for expressions)
+    
+    def is_gtfo(lexeme):
+        return lexeme[0][0] == 'GTFO'
+    
     def is_found_yr(lexeme):
         return lexeme[0][0] == 'FOUND YR'
-
-    # Helper function to check for the IF U SAY SO closing keyword
+    
     def is_if_u_say_so(lexeme):
         return lexeme[0][0] == 'IF U SAY SO'
 
+    
+    # check function declaration
+    lexeme = lexical.lex(text.splitlines()[start].strip())
+
+    if len(lexeme) < 2:
+        syntaxResult += f"syntax error at line {start + 1}: Incorrect format for function definition\n"
+        return start, syntaxResult
+    if lexeme[1][1] != 'Identifier':
+        syntaxResult += f"syntax error at line {start + 1}: Expected function identifier right after 'HOW IZ I'\n"
+        return start, syntaxResult
+    function_name = lexeme[1][0]  # Assuming the function name is right after HOW IZ I
+    if len(lexeme)>2:
+        if lexeme[2][0] != 'YR':
+            syntaxResult += f"syntax error at line {start + 1}: Incorrect function declaration syntax\n"
+            return line, syntaxResult
+        temp = syntaxResult
+        syntaxResult = func_arg(lexeme[3:], start, syntaxResult)
+        if len(temp) < len(syntaxResult):  # Syntax error occurred
+            return start, syntaxResult
     # Main processing of the function block
-    for line in range(start, len(text.splitlines())):
+    for line in range(start+1, len(text.splitlines())):
         lexeme = lexical.lex(text.splitlines()[line].strip())
-        
         if comment(lexeme, obtw, tldr):
             continue
-        
-        # Check for the start of the function definition
-        if not function_start_found:
-            if is_valid_how_iz_i_start(lexeme):
-                if len(lexeme) < 2:
-                    syntaxResult += f"syntax error at line {line + 1}: Incorrect format for function definition\n"
-                    return line, syntaxResult
-
-                function_start_found = True
-                if lexeme[1][1] != 'Identifier':
-                    syntaxResult += f"syntax error at line {line + 1}: Expected function identifier right after 'HOW IZ I'\n"
-                    return line, syntaxResult
-                function_name = lexeme[1][0]  # Assuming the function name is right after HOW IZ I
-                if len(lexeme)>2:
-                    if lexeme[2][0] != 'YR':
-                        syntaxResult += f"syntax error at line {line + 1}: Incorrect function declaration syntax\n"
-                        return line, syntaxResult
-                    temp = syntaxResult
-                    syntaxResult = func_arg(lexeme[3:], line, syntaxResult, symbol_table)
-                    if len(temp) < len(syntaxResult):  # Syntax error occurred
-                        return line, syntaxResult
-                continue
-            else:
-                syntaxResult += f"syntax error at line {line + 1}: Expected 'HOW IZ I <function name>' to start function definition\n"
+        print(lexeme[0][0])
+        # Check for GTFO 
+        if is_gtfo(lexeme):
+            # Check if there is at least one OMG or OMGWTF case before ending
+            if is_found_yr(lexeme):
+                syntaxResult += f"syntax error at line {line + 1}: 'GTFO' cannot be declared after 'FOUND YR' declaration\n"
                 return line, syntaxResult
-        
-        # Check for parameters (YR and AN YR)
-        # if is_yr(lexeme) and not parameters:
-        #     parameters.append(lexeme[1][0])  # Add first parameter
-        #     continue
-        # elif is_an_yr(lexeme):
-        #     parameters.append(lexeme[1][0])  # Add additional parameter
-        #     continue
-
-        # Check for the FOUND YR expression
-        if is_found_yr(lexeme):
-            # Handle the expression part after FOUND YR
-            line += 1
-            lexeme = lexical.lex(text.splitlines()[line].strip())
-            syntaxResult = expression(lexeme, line, syntaxResult, symbol_table)[0]
-            if syntaxResult.endswith("error"):  # Assuming expression appends "error" on failure
-                return line, syntaxResult
+            gtfo_found = True
             continue
 
-        # Check for the closing IF U SAY SO
+        if is_found_yr(lexeme):
+            if is_gtfo(lexeme):
+                syntaxResult += f"syntax error at line {line + 1}: 'GTFO' cannot be declared after 'FOUND YR' declaration\n"
+                return line, syntaxResult
+            foundyr_found = True
+            continue
+
         if is_if_u_say_so(lexeme):
-            if not function_start_found:
-                syntaxResult += f"syntax error at line {line + 1}: 'IF U SAY SO' without a preceding function definition\n"
+            if not gtfo_found and not foundyr_found:
+                syntaxResult += f"syntax error at line {line + 1}: 'IF U SAY SO' cannot be declared without a 'FOUND YR' pr 'GTFO' declaration\n"
                 return line, syntaxResult
-
-            # If no statements were found or the function block was empty
-            if not inside_function:
-                syntaxResult += f"syntax error at line {line + 1}: Function block must contain at least one statement\n"
-                return line, syntaxResult
-
             return line, syntaxResult
 
         # Process statements inside the function body
-        if function_start_found and not inside_function:
+        if not gtfo_found and not foundyr_found:
             temp = syntaxResult
             syntaxResult = statement(lexeme, line, syntaxResult, symbol_table)
             if len(temp) < len(syntaxResult):  # Syntax error occurred
                 return line, syntaxResult
             inside_function = True
             continue
+
+
 
         # Handle invalid lines within the function block
         syntaxResult += f"syntax error at line {line + 1}: Unexpected syntax in function block\n"

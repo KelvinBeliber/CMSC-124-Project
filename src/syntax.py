@@ -34,7 +34,6 @@ def syntax(text):
             if comment(lexeme, obtw, tldr)==True:
                 continue
             if skip>0:
-                print(line+1, skip)
                 skip-=1
                 continue
             # checking code proper
