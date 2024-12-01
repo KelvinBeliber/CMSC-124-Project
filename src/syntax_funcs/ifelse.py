@@ -1,3 +1,4 @@
+from syntax_funcs.statement import statement
 
 def conditional(lexeme, line, syntaxResult, symbol_table, index=0):
     if lexeme[index][0] != "O RLY?":
@@ -22,7 +23,10 @@ def conditional(lexeme, line, syntaxResult, symbol_table, index=0):
             return syntaxResult, index
 
         # YA RLY
-        syntaxResult, index = statement(lexeme, line, syntaxResult, symbol_table, index)
+        if lexeme[index][0] == "O RLY?":
+            syntaxResult = conditional(lexeme, line, syntaxResult, symbol_table)
+        else:
+            syntaxResult = statement(lexeme, line, syntaxResult, symbol_table)
 
     # Check for NO WAI block
     if index < len(lexeme) and lexeme[index][0] == "NO WAI":
@@ -33,8 +37,11 @@ def conditional(lexeme, line, syntaxResult, symbol_table, index=0):
             if lexeme[index][0] == "OIC":
                 break  # Exit NO WAI block
 
-            # NO WAI validator
-            syntaxResult, index = statement(lexeme, line, syntaxResult, symbol_table, index)
+            
+            if lexeme[index][0] == "O RLY?":# nested conditional
+                syntaxResult = conditional(lexeme, line, syntaxResult, symbol_table)
+            else:# NO WAI validator
+                syntaxResult = statement(lexeme, line, syntaxResult, symbol_table)
 
     # Check for OIC to end the conditional block
     if index >= len(lexeme) or lexeme[index][0] != "OIC":
@@ -42,15 +49,5 @@ def conditional(lexeme, line, syntaxResult, symbol_table, index=0):
         return syntaxResult, index
 
     index += 1  # Move past 'OIC'
-
-    return syntaxResult, index
-
-def statement(lexeme, line, syntaxResult, symbol_table, index):
-    if lexeme[index][0] == "VISIBLE":
-        syntaxResult += f"Line {line + 1}: 'VISIBLE' statement recognized\n"
-        index += 1
-    else:
-        syntaxResult += f"syntax error at line {line + 1}: Unrecognized statement '{lexeme[index][0]}'\n"
-        index += 1
 
     return syntaxResult, index

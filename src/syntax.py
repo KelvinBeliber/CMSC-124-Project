@@ -14,6 +14,10 @@ from syntax_funcs.func import func_def
 
 from syntax_funcs.switch import wtf_switch
 
+from syntax_funcs.ifelse import conditional
+
+from syntax_funcs.loop import loop
+
 def syntax(text):
     hai = -1
     kthxbye = -1
