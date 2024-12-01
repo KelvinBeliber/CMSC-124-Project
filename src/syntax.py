@@ -76,7 +76,6 @@ def syntax(text):
                     skip -= line
                     wazzup = 1
                     continue
-
             if lexeme[0][0] == 'BUHBYE':
                 if wazzup != 1:
                     return f"syntax error at line {line+1}: BUHBYE declared without a WAZZUP\n"
@@ -88,6 +87,8 @@ def syntax(text):
                     wazzup = 0
                     buhbye = 0
                     continue
+            if line==len(text.splitlines())-1:
+                return f"syntax error at line {line+1}: Missing KTHXBYE at the end of the code\n"
             ## ----------------------------- statement tree -----------------------------
             if lexeme[0][0] == 'HOW IZ I':
                 syntaxResult, skip = func_def(text, line, syntaxResult, function_table)
