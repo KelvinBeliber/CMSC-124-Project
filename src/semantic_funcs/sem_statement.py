@@ -1,4 +1,4 @@
-from syntax_funcs.operators import operator
+from semantic_funcs.operators import operator
 
 def sem_func_call_arg(lexeme, line, function_table, symbol_table, semanticResult):
     operators = [
@@ -9,14 +9,14 @@ def sem_func_call_arg(lexeme, line, function_table, symbol_table, semanticResult
     ]
     literals = ['Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
 
-    # Ensure the function exists
+    # # Ensure the function exists
     func_name = lexeme[1][0]
-    if func_name not in function_table:
-        semanticResult += f"semantic error at line {line + 1}: Function '{func_name}' not declared.\n"
-        return semanticResult
+    # if func_name not in function_table:
+    #     semanticResult += f"semantic error at line {line + 1}: Function '{func_name}' not declared.\n"
+    #     return semanticResult
 
     # Retrieve expected argument types
-    expected_args = function_table[func_name]
+    # expected_args = function_table[func_name]
 
     # Validate the function arguments
     index = 3  # Start after "I HAS A YR" part
@@ -79,11 +79,6 @@ def sem_assignment(lexeme, symbol_table, line, semanticResult):
     # getting the left-hand side variable
     variable_name = lexeme[0][0]  # name of the left-hand side variable
     declared_type = symbol_table.get(variable_name)
-
-    # If the variable is not declared, flag an error
-    if declared_type is None:
-        semanticResult += f"semantic error at line {line + 1}: Variable '{variable_name}' not declared.\n"
-        return semanticResult
 
     # we check here if the right-hand side TYPE matches the left-hand side TYPE
     if lexeme[2][1] in literals:
@@ -155,6 +150,7 @@ def sem_visible(lexeme, line, symbol_table, semanticResult):
 
     return semanticResult
 
+def gimmeh(symbol_table, var_name):
 
 
 

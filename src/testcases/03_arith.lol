@@ -9,6 +9,7 @@ HAI
     GIMMEH y
 
     VISIBLE x + "+" + y + " = " + SUM OF x AN y
+    OBTW
     VISIBLE x + "-" + y + " = " + DIFF OF x AN y
     VISIBLE x + "*" + y + " = " + PRODUKT OF x AN y
     VISIBLE x + "/" + y + " = " + QUOSHUNT OF x AN y
@@ -27,4 +28,5 @@ HAI
     BTW x + y/x + 0
     VISIBLE SUM OF x AN SUM OF QUOSHUNT OF y AN x AN FAIL
     VISIBLE SUM OF x AN SUM OF QUOSHUNT OF "17" AN x AN FAIL
+    TLDR
 KTHXBYE

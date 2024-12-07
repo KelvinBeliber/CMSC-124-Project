@@ -22,7 +22,8 @@ def syntax(text):
     multi_comment = False
     symbol_table = {'IT':None}
     function_table = {}
-    syntaxResult = ''
+    errors = ''
+    semanticResult = ''
     skip = 0
     types = ['NOOB', 'NUMBR', 'NUMBAR', 'YARN', 'TROOF']
     literals = ['Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
@@ -36,9 +37,9 @@ def syntax(text):
             if len(lexeme) == 0:
                 continue
             if lexeme[0] == ['OBTW', 'Comment Delimiter'] or lexeme[0] == ['TLDR', 'Comment Delimiter']:
-                multi_comment = obtw_comment(syntaxResult, lexeme, line, len(text.splitlines()), multi_comment)
+                multi_comment = obtw_comment(errors, lexeme, line, len(text.splitlines()), multi_comment)
                 if type(multi_comment) == str:
-                    syntaxResult += multi_comment
+                    errors += multi_comment
                     break
             if multi_comment or lexeme[0] == ['TLDR', 'Comment Delimiter']:
                 continue
@@ -70,9 +71,9 @@ def syntax(text):
                 if wazzup == -1 and buhbye == -1:
                     if len(lexeme) > 1:
                         return f"syntax error at line {line+1}: Incorrect WAZZUP syntax\n"
-                    syntaxResult, symbol_table, skip = vardec(text, line+1, symbol_table, syntaxResult)
+                    errors, symbol_table, skip = vardec(text, line+1, symbol_table, errors, semanticResult)
                     if not skip and not symbol_table:
-                        break
+                        return errors
                     skip -= line
                     wazzup = 1
                     continue
@@ -91,13 +92,13 @@ def syntax(text):
                 return f"syntax error at line {line+1}: Missing KTHXBYE at the end of the code\n"
             ## ----------------------------- statement tree -----------------------------
             if lexeme[0][0] == 'HOW IZ I':
-                syntaxResult, skip = func_def(text, line, syntaxResult, function_table)
+                errors, skip = func_def(text, line, errors, function_table)
                 if not skip:
                     break
                 skip -= line
                 continue
             elif lexeme[0][0] == 'WTF?' and possible_switch:
-                syntaxResult, skip = wtf_switch(text, line, syntaxResult, symbol_table, function_table)
+                errors, skip = wtf_switch(text, line, errors, symbol_table, function_table)
                 if not skip:
                     break
                 skip -= line
@@ -105,18 +106,18 @@ def syntax(text):
             if lexeme[0][1]=='Identifier' and len(lexeme)==1:
                 possible_switch = True
                 continue
-            temp = syntaxResult
-            syntaxResult = statement(lexeme, line, syntaxResult, symbol_table, function_table)
-            if len(temp) < len(syntaxResult):
+            temp = errors
+            errors = statement(lexeme, line, errors, symbol_table, function_table)
+            if len(temp) < len(errors):
                 break
-    ## debugging: tracking symbols and defined functions
-    # for key in symbol_table:
-    #     print(f'{key}: {symbol_table[key]}')
-    # for key in function_table:
-    #     print(f'{key}: {function_table[key]}')
-    if len(syntaxResult)==0:
+    # debugging: tracking symbols and defined functions
+    for key in symbol_table:
+        print(f'{key}: {symbol_table[key]}')
+    for key in function_table:
+        print(f'{key}: {function_table[key]}')
+    if len(errors)==0:
         return "syntax correct"
-    return syntaxResult
+    return errors
 
 def main():
     filename = input("Enter the name of the .lol file: ")
