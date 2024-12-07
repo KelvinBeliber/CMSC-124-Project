@@ -46,6 +46,5 @@ def arithmetic(lexeme, line, symbol_table, index, errors):
             continue
         return errors+f"semantic error at {line+1}: invalid operand type", None, index
     # Perform the operation
-    print(line+1, operator, operands)
     result = evaluate_operator(operator, operands[0], operands[1])
     return errors, result, index

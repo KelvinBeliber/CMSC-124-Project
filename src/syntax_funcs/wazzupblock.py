@@ -4,7 +4,7 @@ from syntax_funcs.comment import obtw_comment
 from syntax_funcs.operators import operator
 from semantic_funcs.operators import arithmetic
 
-def vardec(text, start, symbol_table, errors, semanticResult):
+def vardec(text, start, symbol_table, errors):
     literals = ['Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
     operators = [
         'SUM OF', 'DIFF OF', 'PRODUKT OF', 'QUOSHUNT OF', 'MOD OF', 'BIGGR OF', 'SMALLR OF',

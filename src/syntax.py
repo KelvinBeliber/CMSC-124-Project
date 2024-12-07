@@ -6,8 +6,6 @@ from syntax_funcs.comment import obtw_comment
 
 from syntax_funcs.wazzupblock import vardec
 
-from syntax_funcs.operators import operator
-
 from syntax_funcs.statement import statement
 
 from syntax_funcs.func import func_def
@@ -23,7 +21,6 @@ def syntax(text):
     symbol_table = {'IT':None}
     function_table = {}
     errors = ''
-    semanticResult = ''
     skip = 0
     types = ['NOOB', 'NUMBR', 'NUMBAR', 'YARN', 'TROOF']
     literals = ['Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
@@ -71,7 +68,7 @@ def syntax(text):
                 if wazzup == -1 and buhbye == -1:
                     if len(lexeme) > 1:
                         return f"syntax error at line {line+1}: Incorrect WAZZUP syntax\n"
-                    errors, symbol_table, skip = vardec(text, line+1, symbol_table, errors, semanticResult)
+                    errors, symbol_table, skip = vardec(text, line+1, symbol_table, errors)
                     if not skip and not symbol_table:
                         return errors
                     skip -= line
