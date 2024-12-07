@@ -105,6 +105,12 @@ def syntax(text):
                     break
                 skip -= line
                 continue
+            elif lexeme[0][0] == "O RLY?":
+                syntaxResult, skip = conditional(text, line, syntaxResult, symbol_table, function_table)
+                if not skip:
+                    break
+                skip -= line
+                continue
             if lexeme[0][1]=='Identifier' and len(lexeme)==1:
                 possible_switch = True
                 continue

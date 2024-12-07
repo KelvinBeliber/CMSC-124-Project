@@ -171,6 +171,13 @@ def visible(lexeme, line, syntaxResult, symbol_table):
 
 def statement(lexeme, line, syntaxResult, symbol_table, function_table):
         # printing output
+
+    if lexeme[0][0] == "O RLY?":
+        from syntax_funcs.ifelse import conditional
+        print(f"DEBUG: Lexeme list: {lexeme}")
+        syntaxResult, index = conditional(lexeme, line, syntaxResult, symbol_table, 0)
+        return syntaxResult
+    
     if lexeme[0][0] == 'VISIBLE':
         return visible(lexeme[1:], line, syntaxResult, symbol_table)
     
