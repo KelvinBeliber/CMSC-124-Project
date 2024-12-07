@@ -12,13 +12,6 @@ HAI
         I HAS A diff ITZ DIFF OF sum AN 17
         I HAS A prod ITZ PRODUKT OF 3 AN 4
         I HAS A quo ITZ QUOSHUNT OF 4 AN 5
-
-        BTW max(1,1) == 2
-        BTW 1 =< 2
-        I HAS A bool1 ITZ BOTH SAEM BIGGR OF 1 AN 1 AN 2
-        I HAS A bool2 ITZ BOTH SAEM BIGGR OF 1 AN 1 AN SMALLR OF SUM OF 1 AN 1 AN 1
-        I HAS A bool3 ITZ DIFFRINT BIGGR OF 1 AN 1 AN 1
-        I HAS A bool4 ITZ DIFFRINT 1 AN SMALLR OF 1 AN 1
     BUHBYE
     
     BTW print literals and variables
