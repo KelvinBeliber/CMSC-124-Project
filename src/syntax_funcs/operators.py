@@ -61,16 +61,11 @@ def operator(lexeme, line, errors, symbol_table, index=0):
             index += 1  # Move to the first operand of BIGGR OF / SMALLR OF
 
             # Validate first operand of BIGGR OF / SMALLR OF
-            if index >= len(lexeme):
-                errors += f"syntax error at line {line + 1}: Missing first operand for '{nested_operator}'\n"
+            errors, next_index = is_valid_expression(lexeme, index, errors)
+            if not next_index:
+                errors += f"syntax error at line {line + 1}: Invalid operand in {comparison_type} expression\n"
                 return errors, None
-            if lexeme[index][1] == 'Identifier' and lexeme[index][0] not in symbol_table:
-                errors += f"syntax error at line {line + 1}: Variable '{lexeme[index][0]}' not declared\n"
-                return errors, None
-            elif lexeme[index][1] not in literals and lexeme[index][1] != 'Identifier':
-                errors += f"syntax error at line {line + 1}: Invalid operand for '{nested_operator}'\n"
-                return errors, None
-            index += 1
+            index = next_index
 
             # Check for 'AN' keyword
             if index >= len(lexeme) or lexeme[index][0] != 'AN':
@@ -79,16 +74,11 @@ def operator(lexeme, line, errors, symbol_table, index=0):
             index += 1  # Move past 'AN'
 
             # Validate second operand of BIGGR OF / SMALLR OF
-            if index >= len(lexeme):
-                errors += f"syntax error at line {line + 1}: Missing second operand for '{nested_operator}'\n"
+            errors, next_index = is_valid_expression(lexeme, index, errors)
+            if not next_index:
+                errors += f"syntax error at line {line + 1}: Invalid operand in {comparison_type} expression\n"
                 return errors, None
-            if lexeme[index][1] == 'Identifier' and lexeme[index][0] not in symbol_table:
-                errors += f"syntax error at line {line + 1}: Variable '{lexeme[index][0]}' not declared\n"
-                return errors, None
-            elif lexeme[index][1] not in literals and lexeme[index][1] != 'Identifier':
-                errors += f"syntax error at line {line + 1}: Invalid operand for '{nested_operator}'\n"
-                return errors, None
-            index += 1
+            index = next_index
 
         else:
             # Validate second operand directly (non-nested case)
@@ -190,7 +180,10 @@ def operator(lexeme, line, errors, symbol_table, index=0):
                     return errors, index
                 index += 1
             elif lexeme[index][0] in operators:  # Nested operator
-                errors, index = operator(lexeme, line, errors, symbol_table, index)
+                if lexeme[index][0] not in operators[:7]:
+                    errors += f"semantic error at line {line + 1}: Invalid operator in arithmetic expression\n"
+                    return errors, index
+                errors, index = arithmetic(lexeme, line, errors, symbol_table, index)
             else:
                 errors += f"syntax error at line {line + 1}: Invalid operand in arithmetic expression\n"
                 return errors, index
@@ -240,3 +233,5 @@ def operator(lexeme, line, errors, symbol_table, index=0):
     else:
         errors += f"syntax error at line {line + 1}: Unknown operator '{lexeme[index][0]}'\n"
         return errors, None
+    
+    

@@ -2,7 +2,7 @@ import lexical
 from syntax_funcs.comment import btw_comment
 from syntax_funcs.comment import obtw_comment
 from syntax_funcs.operators import operator
-from semantic_funcs.operators import arithmetic
+from semantic_funcs.operators import evaluate_operator
 
 def vardec(text, start, symbol_table, errors):
     literals = ['Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
@@ -38,7 +38,7 @@ def vardec(text, start, symbol_table, errors):
             if(len(temp)<len(errors)):
                 return errors
             temp = errors
-            errors, symbol_table[var_name],_ = arithmetic(lexeme[3:], line, symbol_table, 0, errors)
+            errors, symbol_table[var_name],_ = evaluate_operator(lexeme[3:], line, symbol_table, 0, errors) #arithmetic(lexeme[3:], line, symbol_table, 0, errors)
             if len(temp)<len(errors):
                 return errors
             # symbol_table[var_name] = lexeme[3:]
