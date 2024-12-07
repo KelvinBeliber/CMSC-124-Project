@@ -142,6 +142,63 @@ def comparison(lexeme, line, symbol_table, index, errors):
     result = evaluate_comparison(operator, operands[0], operands[1])
     return errors, result, index
 
+
+def boolean(lexeme, line, symbol_table, index, errors):
+    # Helper function to evaluate an operator
+    def evaluate_operator(operator, operands):
+        if operator == 'BOTH OF':
+            return operands[0] and operands[1]
+        elif operator == 'EITHER OF':
+            return operands[0] or operands[1]
+        elif operator == 'WON OF':
+            return operands[0] ^ operands[1]
+        elif operator == 'NOT':
+            return not operands[0]
+        elif operator == 'ALL OF':
+            for i in len(operands):
+                if operands[i]:
+                    continue
+                return False
+            return True
+        elif operator == 'ANY OF':
+            for i in len(operands):
+                if not operands[i]:
+                    continue
+                return True
+            return False
+        else:
+            raise ValueError(f"Unsupported operator: {operator}")
+
+    operator = lexeme[index][0]
+    index += 1  # Move to first operand
+    # Collect operands
+    operands = []
+    for i in range(3):  # Two operands expected
+        if lexeme[index][0] == 'AN':  # skip AN
+            index+=1
+            continue
+        if lexeme[index][1] == 'Identifier':  # Handle variables
+            var_name = lexeme[index][0]
+            if(type(symbol_table[var_name]) not in (int, float)):
+                return errors+f"semantic error at {line+1}: invalid operand type for arithmetic operations", None, index
+            operands.append(symbol_table[var_name])  # Fetch variable value
+            index+=1
+            continue
+        if lexeme[index][1] in ('NUMBR Literal', 'NUMBAR Literal') :  # Handle numeric literals
+            operands.append(int(lexeme[index][0]))
+            index+=1
+            continue
+        if lexeme[index][0] in operators:  # Handle nested operators
+            errors,nested_result,index = arithmetic(lexeme, line, symbol_table, index,errors)
+            if errors:
+                return errors, None, index
+            operands.append(nested_result)
+            continue
+        return errors+f"semantic error at {line+1}: invalid operand type for arithmetic operations", None, index
+    # Perform the operation
+    result = evaluate_operator(operator, operands[0], operands[1])
+    return errors, result, index
+
 def evaluate_operator(lexeme, line, symbol_table, index, errors):
     operator = lexeme[index][0]
 
