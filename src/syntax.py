@@ -93,6 +93,14 @@ def syntax(text):
                     buhbye = 0
                     continue
             ## ----------------------------- statement tree -----------------------------
+                    # Loop handling
+            if lexeme[0][0] == 'IM IN YR':
+                syntaxResult, skip = loop(text, line, syntaxResult, symbol_table, function_table)
+                if not skip:
+                    break
+                skip -= line
+                continue
+
             if lexeme[0][0] == 'HOW IZ I':
                 syntaxResult, skip = func_def(text, line, syntaxResult, function_table)
                 if not skip:

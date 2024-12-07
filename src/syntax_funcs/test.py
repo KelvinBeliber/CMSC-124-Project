@@ -2,7 +2,7 @@ import lexical
 from syntax_funcs.statement import statement
 from syntax_funcs.comment import obtw_comment
 from syntax_funcs.comment import btw_comment
-from syntax_funcs.operators import operator
+from syntax_funcs.operator import operator
 
 def loop(text, start, syntaxResult, symbol_table, function_table):
     iminyr = False
@@ -19,16 +19,10 @@ def loop(text, start, syntaxResult, symbol_table, function_table):
         return lexeme[0][0] == "IM IN YR"
 
     def is_til(lexeme):
-        for i in range(0, len(lexeme)):
-            if lexeme[i][0] == "TIL":
-                return True
-        return False
+        return lexeme[0][0] == "TIL"
 
     def is_wile(lexeme):
-        for i in range(0, len(lexeme)):
-            if lexeme[i][0] == "WILE":
-                return True
-        return False
+        return lexeme[0][0] == "WILE"
 
     def is_outta(lexeme):
         return lexeme[0][0] == "IM OUTTA YR"
@@ -52,6 +46,7 @@ def loop(text, start, syntaxResult, symbol_table, function_table):
         if not iminyr:
             if is_valid_iminyr(lexeme):
                 iminyr = True
+                in_loop = True
                 if len(lexeme) < 2 or lexeme[1][1] != "Identifier":
                     syntaxResult += f"syntax error at line {line + 1}: Missing or invalid loop label\n"
                     return syntaxResult, None
@@ -61,36 +56,35 @@ def loop(text, start, syntaxResult, symbol_table, function_table):
                 syntaxResult += f"syntax error at line {line + 1}: Expected 'IM IN YR' to start loop block\n"
                 return syntaxResult, None
 
-        # Loop body and end
-        if in_loop:
-            # Loop operation
-            if not loop_operation:
-                if lexeme[0][1] == "Loop Operation" and len(lexeme) > 2 and lexeme[0][0] == "UPPIN YR" or lexeme[0][0] == "NERFIN YR":
-                    loop_operation = lexeme[2][0]  # UPPIN or NERFIN
-                    loop_variable = lexeme[4][0]
-                    if loop_variable not in symbol_table:
-                        syntaxResult += f"syntax error at line {line + 1}: Undefined variable '{loop_variable}'\n"
-                        return syntaxResult, None
-                    continue
+        # Loop operation
+        if in_loop and not loop_operation:
+            if lexeme[0][1] == "Loop Operation" and len(lexeme) > 2 and lexeme[1][0] == "YR":
+                loop_operation = lexeme[0][0]  # UPPIN or NERFIN
+                loop_variable = lexeme[2][0]
+                if loop_variable not in symbol_table:
+                    syntaxResult += f"syntax error at line {line + 1}: Undefined variable '{loop_variable}'\n"
+                    return syntaxResult, None
+                continue
             else:
                 syntaxResult += f"syntax error at line {line + 1}: Expected loop operation (e.g., 'UPPIN YR' or 'NERFIN YR')\n"
                 return syntaxResult, None
-            
-            print(lexeme)
-            # Loop condition
-            if not condition_type:
-                if is_til(lexeme) or is_wile(lexeme):
-                    condition_type = lexeme[5][0]
-                    try:
-                        condition_expression = operator(text, line, syntaxResult, symbol_table, function_table)
-                    except Exception as e:
-                        syntaxResult += f"syntax error at line {line + 1}: Invalid condition expression ({e})\n"
-                        return syntaxResult, None
-                    continue
-                else:
-                    syntaxResult += f"syntax error at line {line + 1}: Expected 'TIL' or 'WILE' condition\n"
+
+        # Loop condition
+        if in_loop and not condition_type:
+            if is_til(lexeme) or is_wile(lexeme):
+                condition_type = lexeme[0][0]
+                try:
+                    condition_expression = operator(lexeme[1:], symbol_table, function_table)
+                except Exception as e:
+                    syntaxResult += f"syntax error at line {line + 1}: Invalid condition expression ({e})\n"
                     return syntaxResult, None
-            
+                continue
+            else:
+                syntaxResult += f"syntax error at line {line + 1}: Expected 'TIL' or 'WILE' condition\n"
+                return syntaxResult, None
+
+        # Loop body and end
+        if in_loop:
             if is_outta(lexeme):
                 if len(lexeme) < 2 or lexeme[1][0] != loop_label:
                     syntaxResult += f"syntax error at line {line + 1}: Mismatched or missing loop label after 'IM OUTTA YR'\n"
@@ -107,5 +101,6 @@ def loop(text, start, syntaxResult, symbol_table, function_table):
                 syntaxResult += f"syntax error at line {line + 1}: Error in loop body ({e})\n"
                 return syntaxResult, None
 
-    syntaxResult += f"syntax error: Reached end of file without closing loop\n"
+    if in_loop:
+        syntaxResult += "syntax error: Reached end of file without closing loop\n"
     return syntaxResult, None

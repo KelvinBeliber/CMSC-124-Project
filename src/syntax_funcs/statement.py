@@ -174,7 +174,6 @@ def statement(lexeme, line, syntaxResult, symbol_table, function_table):
 
     if lexeme[0][0] == "O RLY?":
         from syntax_funcs.ifelse import conditional
-        print(f"DEBUG: Lexeme list: {lexeme}")
         syntaxResult, index = conditional(lexeme, line, syntaxResult, symbol_table, 0)
         return syntaxResult
     
