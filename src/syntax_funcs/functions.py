@@ -38,12 +38,10 @@ def func_def_arg(lexeme, line, errors):
 
 def func_def(text, start, errors, function_table):
     # Variables to track the function state
-    function_start_found = False
     gtfo_found = False
     foundyr_found = False
     function_name = None
     function_lines = 0
-    inside_function = False
     multi_comment = False
     lines_processed = 1
     local_symbol_table = {}

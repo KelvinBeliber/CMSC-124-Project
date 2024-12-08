@@ -89,7 +89,7 @@ def loop(text, start, errors, symbol_table, function_table):
                     return errors, None
                 return errors, line  # Successfully parsed loop block
             # Parse statements inside the loop
-            errors = statement(lexeme, line, errors, symbol_table, function_table, True)
+            errors, _ = statement(lexeme, line, errors, symbol_table, function_table, True)
             if errors is not None:
                 line = line + 1  # Update the line index based on statement parsing
 

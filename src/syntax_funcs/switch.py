@@ -9,7 +9,7 @@ def wtf_switch(text, start, errors, symbol_table, function_table):
     omg = False
     omgwtf = False
     in_case_block = False
-    cases = []
+    cases = {}
     default_case = None
     comment_line_count = 0
     multi_comment = False
