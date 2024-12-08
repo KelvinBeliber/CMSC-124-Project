@@ -155,7 +155,6 @@ def comparison(lexeme, line, symbol_table, index, errors):
                 operands[1] = int(operands[1])
             except:
                 return errors+f"semantic error at {line+1}: YARN, which contains non-numeric characters, cannot be implicitly typecasted to NUMBAR", None, None
-    print(operands)
     result = evaluate_comparison(operator, operands[0], operands[1])
     return errors, result, index
 

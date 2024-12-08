@@ -96,10 +96,11 @@ def syntax(text):
                     break
                 continue
             if lexeme[0][0] == 'IM IN YR':
-                errors, skip = loop(text, line, errors, symbol_table, function_table)
+                errors, skip, temp_output = loop(text, line, errors, symbol_table, function_table)
+                if temp_output:
+                    visible_output+=temp_output
                 if not skip:
                     break
-                skip -= line
                 continue
             if lexeme[0][0] == 'O RLY?' and possible_ifelse:
                 errors, skip, temp_output = conditional(text, line, errors, symbol_table, function_table)
@@ -123,16 +124,16 @@ def syntax(text):
             if len(temp) < len(errors):
                 break
     # debugging: tracking symbols and defined functions
-    for key in symbol_table:
-        print(f'{key}: {symbol_table[key]} -> {type(symbol_table[key])}')
+    # for key in symbol_table:
+    #     print(f'{key}: {symbol_table[key]} -> {type(symbol_table[key])}')
     # for key in function_table:
     #     print(f'{key}: {function_table[key]}')
     if len(errors)==0:
-        print("------------------------")
-        print(visible_output)
-        print("------------------------")
-        return "syntax correct", visible_output, symbol_table
-    return errors, visible_output
+        # print("------------------------")
+        # print(visible_output)
+        # print("------------------------")
+        return visible_output, symbol_table
+    return errors, None
 
 def main():
     filename = input("Enter the name of the .lol file: ")
@@ -141,7 +142,7 @@ def main():
         return
     with open(filename, 'r') as file:
         text = file.read()
-    print(syntax(text))
+    syntax(text)
 
 # Execute main function
 if __name__ == "__main__":
