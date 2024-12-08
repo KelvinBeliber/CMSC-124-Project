@@ -131,8 +131,8 @@ def syntax(text):
         print("------------------------")
         print(visible_output)
         print("------------------------")
-        return "syntax correct"
-    return errors
+        return "syntax correct", visible_output
+    return errors, symbol_table
 
 def main():
     filename = input("Enter the name of the .lol file: ")
