@@ -11,7 +11,6 @@ HAI
     IF U SAY SO
 
     HOW IZ I printName YR person
-        GIMMEH person
         VISIBLE "Hello, " + person
         GTFO
     IF U SAY SO

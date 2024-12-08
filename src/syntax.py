@@ -21,10 +21,6 @@ def syntax(text):
     errors = ''
     skip = 0
     visible_output=''
-    types = ['NOOB', 'NUMBR', 'NUMBAR', 'YARN', 'TROOF']
-    literals = ['Void Literal', 'Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
-    arithmetic_ops = ['SUM OF', 'DIFF OF', 'PRODUKT OF', 'QUOSHUNT OF', 'MOD OF', 'BIGGR OF', 'SMALLR OF']
-    boolean_ops = ['BOTH OF', 'EITHER OF', 'WON OF', 'NOT', 'ALL OF', 'ANY OF']
     for line in range(0, len(text.splitlines())):
         temp_output=''
         lexeme = lexical.lex(text.splitlines()[line].lstrip().rstrip())
@@ -105,23 +101,30 @@ def syntax(text):
                     break
                 skip -= line
                 continue
-            if lexeme[0][0] == 'O RLY?':
-                errors, skip = conditional(text, line, errors, symbol_table, function_table)
+            if lexeme[0][0] == 'O RLY?' and possible_ifelse:
+                errors, skip, temp_output = conditional(text, line, errors, symbol_table, function_table)
+                if temp_output:
+                    visible_output+=temp_output
                 if not skip:
                     break
                 continue
             if lexeme[0][1]=='Identifier' and len(lexeme)==1:
                 possible_switch = True
                 continue
+            possible_switch = False
+            possible_ifelse = False
             temp = errors
             errors, temp_output = statement(lexeme, line, errors, symbol_table, function_table, False)
             if temp_output:
-                visible_output += temp_output
+                if type(temp_output)==str:
+                    visible_output += temp_output
+                elif type(temp_output)==bool:
+                    possible_ifelse=temp_output
             if len(temp) < len(errors):
                 break
     # debugging: tracking symbols and defined functions
-    # for key in symbol_table:
-    #     print(f'{key}: {symbol_table[key]}')
+    for key in symbol_table:
+        print(f'{key}: {symbol_table[key]} -> {type(symbol_table[key])}')
     # for key in function_table:
     #     print(f'{key}: {function_table[key]}')
     if len(errors)==0:

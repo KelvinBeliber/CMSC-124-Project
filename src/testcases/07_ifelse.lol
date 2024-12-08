@@ -11,8 +11,9 @@ HAI
 	VISIBLE "0. Exit"
 
 	VISIBLE "Choice: "
+	
 	GIMMEH choice
-
+	choice IS NOW A NUMBR
 	BOTH SAEM choice AN 1
 	O RLY?
 		YA RLY
@@ -21,12 +22,6 @@ HAI
 			VISIBLE DIFF OF 2022 AN input
 		NO WAI
 			VISIBLE "Invalid Input!"
-	OIC
-
-	DIFFRINT BIGGR OF 3 AN choice AN 3
-	O RLY?
-		YA RLY
-			VISIBLE "Invalid input is > 3."
 	OIC
 
 KTHXBYE

@@ -66,17 +66,17 @@ def comparison(lexeme, line, symbol_table, index, errors):
     # Helper function to evaluate an operator
     def evaluate_comparison(operator, operand1, operand2):
         if operator == 'DIFFRINT':
-            return operand1 != operand2
+            return "WIN" if (operand1 != operand2) else "FAIL"
         elif operator == 'DIFFRINTBIGGR OF':
-            return operand1 > operand2
+            return "WIN" if (operand1 > operand2) else "FAIL"
         elif operator == 'DIFFRINTSMALLR OF':
-            return operand1 < operand2
+            return "WIN" if (operand1 < operand2) else "FAIL"
         elif operator == 'BOTH SAEM':
-            return operand1 == operand2
+            return "WIN" if (operand1 == operand2) else "FAIL"
         elif operator == 'BOTH SAEMBIGGR OF':
-            return operand1 >= operand2
+            return "WIN" if (operand1 >= operand2) else "FAIL"
         elif operator == 'BOTH SAEMSMALLR OF':
-            return operand1 <= operand2
+            return "WIN" if (operand1 <= operand2) else "FAIL"
         else:
             raise ValueError(f"Unsupported operator: {operator}")
 
@@ -144,8 +144,17 @@ def comparison(lexeme, line, symbol_table, index, errors):
         if operands[0] != operands[1]:
             return errors+f"semantic error at {line+1}: BIGGR OF and SMALLR OF syntax requires 1st operand and 2nd operand to match", None, index
         del operands[1]
-    if (type(operands[0]) not in (float, int) or type(operands[1]) not in (float,int)) and operator in ("DIFFRINTBIGGR OF","DIFFRINTSMALLR OF","BOTH SAEMBIGGR OF","BOTH SAEMSMALLR OF"):
-        return errors+f"semantic error at {line+1}: invalid operand type for comparison", None, index
+    if operator in ("DIFFRINTBIGGR OF","DIFFRINTSMALLR OF","BOTH SAEMBIGGR OF","BOTH SAEMSMALLR OF"):
+        if type(operands[0]) not in (float, int):
+            try:
+                operands[0] = int(operands[0])
+            except:
+                return errors+f"semantic error at {line+1}: YARN, which contains non-numeric characters, cannot be implicitly typecasted to NUMBAR", None, None
+        if type(operands[1]) not in (float, int):
+            try:
+                operands[0] = int(operands[0])
+            except:
+                return errors+f"semantic error at {line+1}: YARN, which contains non-numeric characters, cannot be implicitly typecasted to NUMBAR", None, None
     result = evaluate_comparison(operator, operands[0], operands[1])
     return errors, result, index
 
@@ -153,7 +162,7 @@ def boolean(lexeme, line, symbol_table, index, errors):
     # Helper function to evaluate an operator
     def evaluate(operator, operands):
         if operator == 'BOTH OF':
-            return "WIN"  if operands[0] and operands[1] else "FAIL"
+            return "WIN" if operands[0] and operands[1] else "FAIL"
         elif operator == 'EITHER OF':
             return "WIN" if operands[0] or operands[1] else "FAIL"
         elif operator == 'WON OF':
@@ -324,7 +333,6 @@ def smoosh(lexeme, line, symbol_table, index, errors):
 
 def evaluate_operator(lexeme, line, symbol_table, index, errors):
     operator = lexeme[index][0]
-
     # Determine which operator function to call
     if operator in ['SMOOSH']:
         return smoosh(lexeme, line, symbol_table, 1, errors)

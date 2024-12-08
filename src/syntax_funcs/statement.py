@@ -143,11 +143,22 @@ def assignment(lexeme, symbol_table, line, errors):
     
 def expression(lexeme, line, errors, symbol_table): # <operator> | <literal>
     literals = ['Void Literal', 'NUMBR Literal', 'NUMBAR Literal', 'YARN Literal', 'TROOF Literal']
+    temp = errors
     #check if the first element is a valid literal
     if lexeme[0][1] in literals:
+        symbol_table['IT'] = int(lexeme[0][0]) if lexeme[0][1] == 'NUMBR Literal' else float(lexeme[0][0]) if lexeme[0][1] == 'NUMBAR Literal' else lexeme[0][0]
         return errors, None
-    else:
-        return operator(lexeme, line, errors, symbol_table, 0)
+    elif lexeme[0][0] in operators:
+        errors, _ = operator(lexeme, line, errors, symbol_table, 0)
+        if len(temp)!=len(errors):
+            return errors, None
+        errors,result,_ = evaluate_operator(lexeme, line, symbol_table, 0, errors)
+        if len(temp)!=len(errors):
+            return errors, None
+        symbol_table['IT'] = result
+        return errors, None
+
+
 
 def visible(lexeme, line, index, errors, symbol_table, in_code_block):
     temp=errors
@@ -209,7 +220,7 @@ def statement(lexeme, line, errors, symbol_table, function_table, in_code_block)
         
         # expression
         else:
-            return expression(lexeme, line, errors, symbol_table)[0], None
+            return expression(lexeme, line, errors, symbol_table)[0], True
 
     errors += f"syntax error at line {line + 1}: Unexpected syntax\n"
     return errors
