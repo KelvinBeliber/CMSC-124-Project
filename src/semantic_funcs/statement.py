@@ -1,5 +1,7 @@
 from semantic_funcs.operators import evaluate_operator
 import lexical
+import tkinter as tk
+from tkinter import simpledialog
 
 literals = ['Void Literal', 'Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
 operators = ['SUM OF', 'DIFF OF', 'PRODUKT OF', 'QUOSHUNT OF', 'MOD OF', 'BIGGR OF', 'SMALLR OF',
@@ -148,7 +150,18 @@ def evaluate_casting(line, errors, symbol_table, var_name, new_type):
     return errors
 
 def evaluate_gimmeh():
-    return input()
+    # Create the Tkinter root window
+    root = tk.Tk()
+    root.withdraw()  # Hide the root window
+    
+    # Display the input dialog box
+    user_input = simpledialog.askstring("GIMMEH", "Please enter a value:")
+    
+    # Close the Tkinter root window
+    root.destroy()
+    
+    return user_input
+
 
 def evaluate_visible(lexeme, line, symbol_table, index, errors):
     index+=1
