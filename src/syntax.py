@@ -16,30 +16,31 @@ def syntax(text):
     wazzup = -1
     buhbye = -1
     multi_comment = False
-    symbol_table = {'IT':None}
+    symbol_table = {'IT':'NOOB'}
     function_table = {}
     errors = ''
     skip = 0
+    visible_output=''
     types = ['NOOB', 'NUMBR', 'NUMBAR', 'YARN', 'TROOF']
-    literals = ['Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
+    literals = ['Void Literal', 'Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
     arithmetic_ops = ['SUM OF', 'DIFF OF', 'PRODUKT OF', 'QUOSHUNT OF', 'MOD OF', 'BIGGR OF', 'SMALLR OF']
     boolean_ops = ['BOTH OF', 'EITHER OF', 'WON OF', 'NOT', 'ALL OF', 'ANY OF']
     for line in range(0, len(text.splitlines())):
         lexeme = lexical.lex(text.splitlines()[line].lstrip().rstrip())
         if lexeme is not None:
             ## comment skipping
-            lexeme = btw_comment(lexeme)
-            if len(lexeme) == 0:
+            if skip>0: ## skips code blocks including comments inside those code blocks
+                skip-=1
+                continue
+            lexeme = btw_comment(lexeme) # skips btw comment lines outside of code blocks
+            if len(lexeme) == 0: # skips empty lines outside of code blocks
                 continue
             if lexeme[0] == ['OBTW', 'Comment Delimiter'] or lexeme[0] == ['TLDR', 'Comment Delimiter']:
                 multi_comment = obtw_comment(errors, lexeme, line, len(text.splitlines()), multi_comment)
                 if type(multi_comment) == str:
                     errors += multi_comment
                     break
-            if multi_comment or lexeme[0] == ['TLDR', 'Comment Delimiter']:
-                continue
-            if skip>0:
-                skip-=1
+            if multi_comment or lexeme[0] == ['TLDR', 'Comment Delimiter']: # skips OBTW comment lines outside of code blocks
                 continue
             # checking code proper
             # check for hai keyword
@@ -114,7 +115,9 @@ def syntax(text):
                 possible_switch = True
                 continue
             temp = errors
-            errors = statement(lexeme, line, errors, symbol_table, function_table)
+            errors, temp_output = statement(lexeme, line, errors, symbol_table, function_table)
+            if temp_output:
+                visible_output += temp_output
             if len(temp) < len(errors):
                 break
     # debugging: tracking symbols and defined functions
@@ -123,6 +126,9 @@ def syntax(text):
     for key in function_table:
         print(f'{key}: {function_table[key]}')
     if len(errors)==0:
+        print("------------------------")
+        print(visible_output)
+        print("------------------------")
         return "syntax correct"
     return errors
 

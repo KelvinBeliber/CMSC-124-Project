@@ -20,7 +20,7 @@ def wtf_switch(text, start, errors, symbol_table, function_table):
 
     # Helper function to check if it's an OMG case
     def is_omg_case(lexeme):
-        literals = ['Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
+        literals = ['Void Literal', 'Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
         if len(lexeme)!=2:
             return False
         return lexeme[0][0] == 'OMG' and lexeme[1][1] in literals

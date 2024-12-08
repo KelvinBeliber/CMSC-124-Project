@@ -1,5 +1,5 @@
 def operator(lexeme, line, errors, symbol_table, index=0):
-    literals = ['Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
+    literals = ['Void Literal', 'Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
     operators = [
         'SUM OF', 'DIFF OF', 'PRODUKT OF', 'QUOSHUNT OF', 'MOD OF', 'BIGGR OF', 'SMALLR OF',
         'BOTH OF', 'EITHER OF', 'WON OF', 'NOT', 'ALL OF', 'ANY OF',
@@ -208,9 +208,15 @@ def operator(lexeme, line, errors, symbol_table, index=0):
                 errors += f"syntax error at line {line + 1}: Invalid operand in SMOOSH expression\n"
                 return errors, None
             index = next_index
+            
 
             # Check if there's an 'AN' keyword after each operand except the last
             if index < len(lexeme):
+                if lexeme[index][0] == 'MKAY':
+                    if index != len(lexeme)-1:
+                        errors += f"syntax error at line {line + 1}: Invalid operand in SMOOSH expression\n"
+                        return f"syntax error at line {line +1}: MKAY declared too early"
+                    break
                 if lexeme[index][0] != 'AN':
                     errors += f"syntax error at line {line + 1}: Missing or incorrect 'AN' keyword in SMOOSH arguments\n"
                     return errors, None

@@ -5,7 +5,7 @@ from syntax_funcs.operators import operator
 from semantic_funcs.operators import evaluate_operator
 
 def vardec(text, start, symbol_table, errors):
-    literals = ['Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
+    literals = ['Void Literal', 'Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
     operators = [
         'SUM OF', 'DIFF OF', 'PRODUKT OF', 'QUOSHUNT OF', 'MOD OF', 'BIGGR OF', 'SMALLR OF',
         'BOTH OF', 'EITHER OF', 'WON OF', 'NOT', 'ALL OF', 'ANY OF',
@@ -27,7 +27,7 @@ def vardec(text, start, symbol_table, errors):
             return errors
         
         # Check if the value being assigned is a valid literal or identifier
-        if lexeme[3][1] not in literals and lexeme[3][1] != 'Identifier' and lexeme[3][0] not in operators: 
+        if lexeme[3][1] not in literals and lexeme[3][1] != 'Identifier' and lexeme[3][0] not in operators:
             errors += f"syntax error at line {line + 1}: Invalid initialization for variable '{var_name}'\n"
             return errors
         
@@ -41,7 +41,6 @@ def vardec(text, start, symbol_table, errors):
             errors, symbol_table[var_name],_ = evaluate_operator(lexeme[3:], line, symbol_table, 0, errors) #arithmetic(lexeme[3:], line, symbol_table, 0, errors)
             if len(temp)<len(errors):
                 return errors
-            # symbol_table[var_name] = lexeme[3:]
             return errors
         elif lexeme[3][1] == 'Identifier':
             if lexeme[3][0] not in symbol_table:
@@ -51,8 +50,6 @@ def vardec(text, start, symbol_table, errors):
             int(lexeme[3][0]) if (lexeme[3][1] == 'NUMBR Literal') else 
             float(lexeme[3][0]) if (lexeme[3][1] == 'NUMBAR Literal') else
             lexeme[3][0] if (lexeme[3][1] == 'YARN Literal') else
-            True if (lexeme[3][0] == 'WIN') else
-            False if (lexeme[3][0] == 'FAIL') else
             lexeme[3][0]
             )  # Add to symbol table with variable and its value (for both variable and literal value cases)
         return errors
@@ -81,7 +78,7 @@ def vardec(text, start, symbol_table, errors):
                         errors += f"syntax error at line {line + 1}: Variable '{var_name}' already declared\n"
                         return errors, None, None
                         
-                    symbol_table[var_name] = None
+                    symbol_table[var_name] = "NOOB"
                 elif len(lexeme) >= 4 and lexeme[2][0] == 'ITZ':
                     # Handle initialization with ITZ
                     temp = errors

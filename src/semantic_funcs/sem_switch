@@ -3,7 +3,7 @@ def sem_wtf_switch(lexeme, line, symbol_table, semanticResult):
     seen_cases = set()
     seen_default = False
     in_case_block = False
-    literals = ['Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
+    literals = ['Void Literal', 'Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
 
     def check_case_literal(case_value):
         """Ensure the case value is a valid literal."""

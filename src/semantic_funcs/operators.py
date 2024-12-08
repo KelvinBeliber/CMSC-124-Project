@@ -1,4 +1,4 @@
-literals = ['Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
+literals = ['Void Literal', 'Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
 operators = ['SUM OF', 'DIFF OF', 'PRODUKT OF', 'QUOSHUNT OF', 'MOD OF', 'BIGGR OF', 'SMALLR OF',
         'BOTH OF', 'EITHER OF', 'WON OF', 'NOT', 'ALL OF', 'ANY OF',
         'BOTH SAEM', 'DIFFRINT',
@@ -6,7 +6,7 @@ operators = ['SUM OF', 'DIFF OF', 'PRODUKT OF', 'QUOSHUNT OF', 'MOD OF', 'BIGGR 
 
 def arithmetic(lexeme, line, symbol_table, index, errors):
     # Helper function to evaluate an operator
-    def evaluate_operator(operator, operand1, operand2):
+    def evaluate(operator, operand1, operand2):
         if operator == 'SUM OF':
             return operand1 + operand2
         elif operator == 'DIFF OF':
@@ -51,7 +51,7 @@ def arithmetic(lexeme, line, symbol_table, index, errors):
             continue
         return errors+f"semantic error at {line+1}: invalid operand type for arithmetic operations", None, index
     # Perform the operation
-    result = evaluate_operator(operator, operands[0], operands[1])
+    result = evaluate(operator, operands[0], operands[1])
     return errors, result, index
 
 def comparison(lexeme, line, symbol_table, index, errors):
@@ -91,7 +91,6 @@ def comparison(lexeme, line, symbol_table, index, errors):
                 False if (lexeme[index][0] == 'FAIL') else
                 lexeme[index][0]
             )
-            print(lexeme[index][0], line+1)
             index+=1
             continue
         if lexeme[index][0] in operators:  # Handle nested operators
@@ -117,6 +116,7 @@ def comparison(lexeme, line, symbol_table, index, errors):
                         lexeme[index][0] if (lexeme[index][1] == 'YARN Literal') else
                         True if (lexeme[index][0] == 'WIN') else
                         False if (lexeme[index][0] == 'FAIL') else
+                        None if (lexeme[index][0] == 'NOOB') else
                         lexeme[index][0]
                     )
                     index+=2
@@ -126,7 +126,6 @@ def comparison(lexeme, line, symbol_table, index, errors):
                     if errors:
                         return errors, None, index
                     operands.append(nested_result)
-                    print(operands)
                     index+1
                     continue
                 continue
@@ -142,75 +141,190 @@ def comparison(lexeme, line, symbol_table, index, errors):
     result = evaluate_comparison(operator, operands[0], operands[1])
     return errors, result, index
 
-
 def boolean(lexeme, line, symbol_table, index, errors):
     # Helper function to evaluate an operator
-    def evaluate_operator(operator, operands):
+    def evaluate(operator, operands):
         if operator == 'BOTH OF':
-            return operands[0] and operands[1]
+            return "WIN"  if operands[0] and operands[1] else "FAIL"
         elif operator == 'EITHER OF':
-            return operands[0] or operands[1]
+            return "WIN" if operands[0] or operands[1] else "FAIL"
         elif operator == 'WON OF':
-            return operands[0] ^ operands[1]
+            return "WIN" if (operands[0] ^ operands[1]) else "FAIL"
         elif operator == 'NOT':
-            return not operands[0]
+            return "WIN" if not operands else "FAIL"
         elif operator == 'ALL OF':
-            for i in len(operands):
+            for i in range(len(operands)):
                 if operands[i]:
                     continue
-                return False
-            return True
+                return "FAIL"
+            return "WIN"
         elif operator == 'ANY OF':
-            for i in len(operands):
+            for i in range(len(operands)):
                 if not operands[i]:
                     continue
-                return True
-            return False
+                return "WIN"
+            return "FAIL"
         else:
             raise ValueError(f"Unsupported operator: {operator}")
+        
+    def two_operand(lexeme, line, symbol_table, index, errors):
+        # Collect operands
+        operands = []
+        for i in range(3):  # Two operands expected
+            if lexeme[index][0] == 'AN':  # skip AN
+                index+=1
+                continue
+            if lexeme[index][1] == 'Identifier':  # Handle variables
+                var_name = lexeme[index][0]
+                operands.append(True if symbol_table[var_name]=="WIN" else False if symbol_table in ("FAIL", "NOOB") else symbol_table[var_name])  # Fetch variable value
+                index+=1
+                continue
+            if lexeme[index][1] in literals :  # Handle numeric literals
+                operands.append(
+                        int(lexeme[index][0]) if (lexeme[index][1] == 'NUMBR Literal') else 
+                        float(lexeme[index][0]) if (lexeme[index][1] == 'NUMBAR Literal') else
+                        lexeme[index][0] if (lexeme[index][1] == 'YARN Literal') else
+                        True if (lexeme[index][0] == 'WIN') else
+                        False if (lexeme[index][0] == 'FAIL') else
+                        None if (lexeme[index][0] == 'NOOB') else
+                        lexeme[index][0]
+                    )
+                index+=1
+                continue
+            if lexeme[index][0] in operators:  # Handle nested operators
+                errors,nested_result,index = evaluate_operator(lexeme, line, symbol_table, index,errors)
+                if errors:
+                    return errors, None, index
+                operands.append(True if nested_result=="WIN" else False if nested_result in ("NOOB", "FAIL") else nested_result)
+                continue
+            return errors+f"semantic error at {line+1}: invalid operand type for {operator} operations", None, index
+        # Perform the operation
+        result = evaluate(operator, operands)
+        return errors, result, index
+    
+    def one_operand(lexeme, line, symbol_table, index, errors):
+        operands = []
+        if lexeme[index][1] == 'Identifier':  # Handle variables
+            var_name = lexeme[index][0]
+            operands.append(True if symbol_table[var_name]=="WIN" else False if symbol_table in ("FAIL", "NOOB") else symbol_table[var_name])
+            index+=1
+        elif lexeme[index][1] in literals :  # Handle numeric literals
+            operands.append(
+                        int(lexeme[index][0]) if (lexeme[index][1] == 'NUMBR Literal') else 
+                        float(lexeme[index][0]) if (lexeme[index][1] == 'NUMBAR Literal') else
+                        lexeme[index][0] if (lexeme[index][1] == 'YARN Literal') else
+                        True if (lexeme[index][0] == 'WIN') else
+                        False if (lexeme[index][0] == 'FAIL') else
+                        None if (lexeme[index][0] == 'NOOB') else
+                        lexeme[index][0]
+                    )
+            index+=1
+        elif lexeme[index][0] in operators:  # Handle nested operators
+            errors,nested_result,index = evaluate_operator(lexeme, line, symbol_table, index,errors)
+            if errors:
+                return errors, None, index
+            operands.append("NOT", True if nested_result=="WIN" else False if nested_result in ("NOOB", "FAIL") else nested_result)
+        else:
+            raise ValueError(f"Invalid Operand")
+        # Perform the operation
+        result = evaluate(operator, operands)
+        return errors, result, index
+
+    def inf_operand(lexeme, line, symbol_table, index, errors):
+        # Collect operands
+        operands = []
+        while lexeme[index][0]!='MKAY':  # Two operands expected
+            if lexeme[index][0] == 'AN':  # skip AN
+                index+=1
+                continue
+            if lexeme[index][1] == 'Identifier':  # Handle variables
+                var_name = lexeme[index][0]
+                operands.append(symbol_table[var_name])  # Fetch variable value
+                index+=1
+                continue
+            if lexeme[index][1] in literals :  # Handle numeric literals
+                operands.append(
+                        int(lexeme[index][0]) if (lexeme[index][1] == 'NUMBR Literal') else 
+                        float(lexeme[index][0]) if (lexeme[index][1] == 'NUMBAR Literal') else
+                        lexeme[index][0] if (lexeme[index][1] == 'YARN Literal') else
+                        True if (lexeme[index][0] == 'WIN') else
+                        False if (lexeme[index][0] == 'FAIL') else
+                        None if (lexeme[index][0] == 'NOOB') else
+                        lexeme[index][0]
+                    )
+                index+=1
+                continue
+            if lexeme[index][0] in operators:  # Handle nested operators
+                errors,nested_result,index = evaluate_operator(lexeme, line, symbol_table, index, errors)
+                if errors:
+                    return errors, None, index
+                operands.append(nested_result)
+                continue
+            return errors+f"semantic error at {line+1}: invalid operand type for {operator} operations", None, index
+        # Perform the operation
+        result = evaluate(operator, operands)
+        return errors, result, index
 
     operator = lexeme[index][0]
-    index += 1  # Move to first operand
-    # Collect operands
+    index+=1
+    if operator in ("BOTH OF", "EITHER OF", "WON OF"):
+        return two_operand(lexeme, line, symbol_table, index, errors)
+    elif operator == "NOT":
+        return one_operand(lexeme, line, symbol_table, index, errors)
+    elif operator in ("ANY OF", "ALL OF"):
+        return inf_operand(lexeme, line, symbol_table, index, errors)
+    else: 
+        raise ValueError(f"Invalid Operand")
+
+def smoosh(lexeme, line, symbol_table, index, errors):
+    # Helper function to evaluate an operator
+    def evaluate(operands):
+        result = str(operands[0])
+        for i in range(1,len(operands)):
+            result = result + " " + str(operands[i]).replace('"', '')
+        return result
+
     operands = []
-    for i in range(3):  # Two operands expected
+    while index!=len(lexeme) and lexeme[index][0]!='MKAY':  # Two operands expected
         if lexeme[index][0] == 'AN':  # skip AN
             index+=1
             continue
         if lexeme[index][1] == 'Identifier':  # Handle variables
             var_name = lexeme[index][0]
-            if(type(symbol_table[var_name]) not in (int, float)):
-                return errors+f"semantic error at {line+1}: invalid operand type for arithmetic operations", None, index
             operands.append(symbol_table[var_name])  # Fetch variable value
             index+=1
             continue
-        if lexeme[index][1] in ('NUMBR Literal', 'NUMBAR Literal') :  # Handle numeric literals
-            operands.append(int(lexeme[index][0]))
+        if lexeme[index][1] in literals :  # Handle numeric literals
+            operands.append(
+                    int(lexeme[index][0]) if (lexeme[index][1] == 'NUMBR Literal') else 
+                    float(lexeme[index][0]) if (lexeme[index][1] == 'NUMBAR Literal') else
+                    lexeme[index][0] if (lexeme[index][1] == 'YARN Literal') else
+                    lexeme[index][0]
+                )
             index+=1
             continue
         if lexeme[index][0] in operators:  # Handle nested operators
-            errors,nested_result,index = arithmetic(lexeme, line, symbol_table, index,errors)
+            errors,nested_result,index = evaluate_operator(lexeme, line, symbol_table, index, errors)
             if errors:
                 return errors, None, index
             operands.append(nested_result)
             continue
-        return errors+f"semantic error at {line+1}: invalid operand type for arithmetic operations", None, index
+        return errors+f"semantic error at {line+1}: invalid operand type for SMOOSH operations", None, index
     # Perform the operation
-    result = evaluate_operator(operator, operands[0], operands[1])
+    result = evaluate(operands)
     return errors, result, index
 
 def evaluate_operator(lexeme, line, symbol_table, index, errors):
     operator = lexeme[index][0]
 
     # Determine which operator function to call
-    # if operator in ['SMOOSH']:
-    #     return smoosh(lexeme, line, symbol_table, index, errors)
+    if operator in ['SMOOSH']:
+        return smoosh(lexeme, line, symbol_table, 1, errors)
     if operator in operators[:7]:  # Arithmetic operators
         return arithmetic(lexeme, line, symbol_table, index, errors)
-    # elif operator in operators[7:13]:  # Boolean operators
-    #     return boolean(lexeme, line, symbol_table, index, errors)
+    elif operator in operators[7:13]:  # Boolean operators
+        return boolean(lexeme, line, symbol_table, index, errors)
     elif operator in operators[13:15]:  # Comparison operators
         return comparison(lexeme, line, symbol_table, index, errors)
     else:
-        errors += f"syntax error at line {line + 1}: Unknown operator '{operator}'\n"
-        return errors, None, index
+        raise ValueError(f"syntax error at line {line + 1}: Unknown operator '{lexeme[index][0]}'\n")

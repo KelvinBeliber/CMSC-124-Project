@@ -1,4 +1,8 @@
 from syntax_funcs.operators import operator
+from semantic_funcs.operators import evaluate_operator
+from semantic_funcs.statement import evaluate_visible
+from semantic_funcs.statement import evaluate_gimmeh
+from semantic_funcs.statement import evaluate_casting
 
 def func_call_arg(lexeme, line, function_table, symbol_table, errors):
     operators = [
@@ -7,7 +11,7 @@ def func_call_arg(lexeme, line, function_table, symbol_table, errors):
         'BOTH SAEM', 'DIFFRINT',
         'SMOOSH'
     ]
-    literals = ['Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
+    literals = ['Void Literal', 'Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
     def is_valid_expression(lexeme, index, errors):
         """Helper function to validate an arithmetic or logical expression."""
         if lexeme[index][0] in operators:  # Check for nested expressions
@@ -56,7 +60,6 @@ def func_call_arg(lexeme, line, function_table, symbol_table, errors):
 def casting(lexeme, line, symbol_table, errors):
     type = ['NOOB', 'NUMBR', 'NUMBAR', 'YARN', 'TROOF']
     index = 0
-    print(lexeme)
     if lexeme[index][0] == 'MAEK':
         index+=1
         if lexeme[index] == ['A','Typecasting Operation']:
@@ -65,18 +68,22 @@ def casting(lexeme, line, symbol_table, errors):
             errors += f"syntax error at line {line + 1}: No variable to typecast!\n"
         if lexeme[index][0] not in symbol_table:
             errors += f"syntax error at line {line + 1}: Variable was not declared!\n"
+        var_name = lexeme[index][0]
         index+=1
         if lexeme[index][0] not in type:
             errors += f"syntax error at line {line + 1}: Invalid type for casting\n"
-        index+=1
-    elif lexeme[1][0] == 'IS NOW A':
+        # errors, symbol_table[var_name] = evaluate_casting(line, errors, symbol_table, var_name, lexeme[index][0]) evaluate_casting not yet finished
+    elif lexeme[index][1] == 'Identifier' and lexeme[index+1][0] == 'IS NOW A':
+        if lexeme[index][0] not in symbol_table:
+            errors += f"syntax error at line {line + 1}: Variable was not declared!\n"
+        var_name = lexeme[index][0]
         if lexeme[2][0] not in type:
             errors += f"syntax error at line {line + 1}: Invalid type for casting\n"
-    # put code to recast (semantics)
+        # errors, symbol_table[var_name] = evaluate_casting(line, errors, symbol_table, var_name, lexeme[2][0]) evaluate_casting not yet finished
     return errors
 
 def assignment(lexeme, symbol_table, line, errors):
-    literals = ['Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
+    literals = ['Void Literal', 'Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
     
     # Check if the left-hand side is a valid identifier (variable)
     if lexeme[0][1] != 'Identifier':
@@ -96,13 +103,18 @@ def assignment(lexeme, symbol_table, line, errors):
         return errors
     
     # Handle type casting if the third token is 'MAEK' or 'IS NOW A'
-    if ['MAEK', 'Typecasting Operation'] == lexeme[2] or ['IS NOW A', 'Typecasting Operation'] == lexeme[2]:
+    if ['MAEK', 'Typecasting Operation'] == lexeme[2] or ['IS NOW A', 'Typecasting Operation'] == lexeme[1]:
         errors = casting(lexeme[2:], line, symbol_table, errors)
         return errors
 
     # Handle the right-hand side expression, it can be a literal, an identifier, or an operator expression
     if lexeme[2][1] in literals:
-        # If the right-hand side is a literal (e.g., '5', 'TRUE', etc.)
+        symbol_table[var_name] = (
+                    int(lexeme[2][0]) if (lexeme[2][1] == 'NUMBR Literal') else 
+                    float(lexeme[2][0]) if (lexeme[2][1] == 'NUMBAR Literal') else
+                    lexeme[2][0] if (lexeme[2][1] == 'YARN Literal') else
+                    lexeme[2][0]
+                )
         return errors  # No further processing needed, literal assignment is valid
     elif lexeme[2][1] == 'Identifier':
         # If the right-hand side is a variable (check if it's declared)
@@ -115,10 +127,14 @@ def assignment(lexeme, symbol_table, line, errors):
         # If the right-hand side is an operator expression (e.g., SUM OF, DIFF OF)
         # Use the operator function to process the expression
         errors, _ = operator(lexeme, line, errors, symbol_table, 2)
+        temp = errors
+        errors, symbol_table[var_name],_ = evaluate_operator(lexeme[2:], line, symbol_table, 0, errors)
+        if len(temp)<len(errors):
+            return errors
     return errors
     
 def expression(lexeme, line, errors, symbol_table): # <operator> | <literal>
-    literals = ['NUMBR Literal', 'NUMBAR Literal', 'YARN Literal', 'TROOF Literal']
+    literals = ['Void Literal', 'NUMBR Literal', 'NUMBAR Literal', 'YARN Literal', 'TROOF Literal']
     #check if the first element is a valid literal
     if lexeme[0][1] in literals:
         return errors, None
@@ -126,7 +142,8 @@ def expression(lexeme, line, errors, symbol_table): # <operator> | <literal>
         return operator(lexeme, line, errors, symbol_table, 0)
 
 def visible(lexeme, line, errors, symbol_table):
-    literals = ['Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
+    temp = errors
+    literals = ['Void Literal', 'Type Literal', 'TROOF Literal', 'NUMBAR Literal', 'NUMBR Literal', 'YARN Literal']
     operators = [
         'SUM OF', 'DIFF OF', 'PRODUKT OF', 'QUOSHUNT OF', 'MOD OF', 'BIGGR OF', 'SMALLR OF',
         'BOTH OF', 'EITHER OF', 'WON OF', 'NOT', 'ALL OF', 'ANY OF',
@@ -166,8 +183,11 @@ def visible(lexeme, line, errors, symbol_table):
                 errors += f"syntax error at line {line + 1}: Insufficient VISIBLE arguments\n"
                 break
             index += 1  # Move past 'AN'
-
-    return errors
+    if len(temp) == len(errors):
+        errors, result, _ = evaluate_visible(lexeme, line, symbol_table, 0, errors)
+        if len(temp) == len(errors):
+            return errors, result
+    return errors, None
 
 def statement(lexeme, line, errors, symbol_table, function_table):
         # printing output
@@ -177,29 +197,32 @@ def statement(lexeme, line, errors, symbol_table, function_table):
     # taking input
     if lexeme[0][0] == 'GIMMEH':
         if len(lexeme) > 2 or len(lexeme) <= 1:
-            return errors + f"syntax error at line {line+1}: Incorrect GIMMEH syntax!\n"
+            return errors + f"syntax error at line {line+1}: Incorrect GIMMEH syntax!\n", None
         if lexeme[1][1] != 'Identifier':
-            return errors + f"syntax error at line {line+1}: Incorrect GIMMEH syntax!\n"
-        return errors  # Correct GIMMEH syntax
+            return errors + f"syntax error at line {line+1}: Incorrect GIMMEH syntax!\n", None
+        if lexeme[1][0] not in symbol_table:
+            return errors + f"syntax error at line {line+1}: Variable {lexeme[1][0]} not declared!\n", None
+        symbol_table[lexeme[1][0]] = evaluate_gimmeh()
+        return errors, None  # Correct GIMMEH syntax
     
     if lexeme[0][0] == 'I IZ':
         if len(lexeme) < 4:
-             return errors + f"syntax error at line {line+1}: Incorrect 'I IZ' syntax!\n"
-        return func_call_arg(lexeme, line, function_table, symbol_table, errors)
+             return errors + f"syntax error at line {line+1}: Incorrect 'I IZ' syntax!\n", None
+        return func_call_arg(lexeme, line, function_table, symbol_table, errors), None
 
     # handle assignment, casting, and expressions
     if len(lexeme) >= 3:  # assignment or expression has at least 3 tokens
         # assignment
         if ['R', 'Variable Assignment'] == lexeme[1]:
-            return assignment(lexeme, symbol_table, line, errors)
+            return assignment(lexeme, symbol_table, line, errors), None
         
         # casting
         elif ['MAEK', 'Typecasting Operation'] == lexeme[0] or ['IS NOW A', 'Typecasting Operation'] == lexeme[1]:
-            return casting(lexeme, line, symbol_table, errors)
+            return casting(lexeme, line, symbol_table, errors), None
         
         # expression
         else:
-            return expression(lexeme, line, errors, symbol_table)[0]
+            return expression(lexeme, line, errors, symbol_table)[0], None
 
     errors += f"syntax error at line {line + 1}: Unexpected syntax\n"
     return errors

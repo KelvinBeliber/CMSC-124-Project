@@ -105,7 +105,7 @@ token_patterns = {
     r'\s*GTFO\s*': 'Return Keyword',
     r'\s*FOUND YR\s+': 'Return Keyword',
     r'\s*I IZ\s+': 'Function Call',
-    r'\s*MKAY\s+': 'Concatenation Delimiter',
+    r'\s*MKAY\s*': 'Concatenation Delimiter',
     r'\s*NOOB\s+': 'Void Literal',
     r'\s*(NUMBR|NUMBAR|YARN|TROOF|NOOB)\s?': 'Type Literal',
     r'\s*(WIN|FAIL)\s*': 'TROOF Literal',

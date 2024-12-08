@@ -12,6 +12,8 @@ HAI
         I HAS A diff ITZ DIFF OF sum AN 17
         I HAS A prod ITZ PRODUKT OF 3 AN 4
         I HAS A quo ITZ QUOSHUNT OF 4 AN 5
+
+        I HAS A concat ITZ SMOOSH sum AN diff AN prod AN quo AN name AN num MKAY
     BUHBYE
     
     BTW print literals and variables
