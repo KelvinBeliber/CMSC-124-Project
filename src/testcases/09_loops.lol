@@ -6,7 +6,7 @@ HAI
 	
 	VISIBLE "Gimmeh a number: "
 	GIMMEH num1
-
+	num1 IS NOW A NUMBR
 	num2 R 0
 
 	IM IN YR asc UPPIN YR num2 WILE BOTH SAEM num2 AN SMALLR OF num2 AN num1

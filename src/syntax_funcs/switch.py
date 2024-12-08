@@ -106,7 +106,6 @@ def wtf_switch(text, start, errors, symbol_table, function_table):
             errors, result = evaluate_switch(choice, cases, symbol_table, function_table, errors)
             if len(temp)==len(errors):
                 return errors, lines_processed, result
-            
             return errors, None, None
         
         if is_gtfo(lexeme):

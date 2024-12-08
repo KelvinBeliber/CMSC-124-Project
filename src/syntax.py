@@ -96,10 +96,11 @@ def syntax(text):
                     break
                 continue
             if lexeme[0][0] == 'IM IN YR':
-                errors, skip = loop(text, line, errors, symbol_table, function_table)
+                errors, skip, temp_output = loop(text, line, errors, symbol_table, function_table)
+                if temp_output:
+                    visible_output+=temp_output
                 if not skip:
                     break
-                skip -= line
                 continue
             if lexeme[0][0] == 'O RLY?' and possible_ifelse:
                 errors, skip, temp_output = conditional(text, line, errors, symbol_table, function_table)
@@ -127,12 +128,13 @@ def syntax(text):
         print(f'{key}: {symbol_table[key]} -> {type(symbol_table[key])}')
     # for key in function_table:
     #     print(f'{key}: {function_table[key]}')
+    symbol_getter(symbol_table)
     if len(errors)==0:
-        print("------------------------")
-        print(visible_output)
-        print("------------------------")
-        return "syntax correct", visible_output
-    return errors, symbol_table
+        return visible_output
+    return errors
+
+def symbol_getter(symbol_table):
+    return symbol_table
 
 def main():
     filename = input("Enter the name of the .lol file: ")

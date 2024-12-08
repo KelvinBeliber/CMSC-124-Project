@@ -142,7 +142,7 @@ def comparison(lexeme, line, symbol_table, index, errors):
     # Perform the operation
     if len(operands)==3:
         if operands[0] != operands[1]:
-            return errors+f"semantic error at {line+1}: BIGGR OF and SMALLR OF syntax requires 1st operand and 2nd operand to match", None, index
+            return errors+f"semantic error at {line+1}: BIGGR OF and SMALLR OF syntax requires 1st operand and 2nd operand to match", None, None
         del operands[1]
     if operator in ("DIFFRINTBIGGR OF","DIFFRINTSMALLR OF","BOTH SAEMBIGGR OF","BOTH SAEMSMALLR OF"):
         if type(operands[0]) not in (float, int):
@@ -152,9 +152,10 @@ def comparison(lexeme, line, symbol_table, index, errors):
                 return errors+f"semantic error at {line+1}: YARN, which contains non-numeric characters, cannot be implicitly typecasted to NUMBAR", None, None
         if type(operands[1]) not in (float, int):
             try:
-                operands[0] = int(operands[0])
+                operands[1] = int(operands[1])
             except:
                 return errors+f"semantic error at {line+1}: YARN, which contains non-numeric characters, cannot be implicitly typecasted to NUMBAR", None, None
+    print(operands)
     result = evaluate_comparison(operator, operands[0], operands[1])
     return errors, result, index
 
