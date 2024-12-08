@@ -17,12 +17,12 @@ class LOLCodeInterpreterGUI:
         
         # Lexeme list and symbol table
         self.create_Lexemes_table()
-        self.create_symbol_table()
+        self.create_symbol_table_field()
         
         # run button and console
         self.create_run_button()
         self.create_console()
-    
+
     def create_frames(self):
         self.file_frame = tk.Frame(self.root)
         self.file_frame.pack(fill=tk.X, padx=5, pady=5)
@@ -35,6 +35,10 @@ class LOLCodeInterpreterGUI:
         
         self.console_frame = tk.Frame(self.root)
         self.console_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        
+        # Create the symbol table frame
+        self.symbol_table_frame = tk.Frame(self.bottom_frame)
+        self.symbol_table_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5)
     
     def create_file_explorer(self):
         self.file_label = tk.Label(self.file_frame, text="File: None")
@@ -59,20 +63,15 @@ class LOLCodeInterpreterGUI:
         self.Lexemes_scrollbar = tk.Scrollbar(self.bottom_frame, command=self.Lexemes_tree.yview)
         self.Lexemes_scrollbar.pack(side=tk.LEFT, fill=tk.Y)
         self.Lexemes_tree.configure(yscrollcommand=self.Lexemes_scrollbar.set)
-    
-    def create_symbol_table(self):
-        self.symbol_label = tk.Label(self.bottom_frame, text="Symbol Table")
-        self.symbol_label.pack(anchor="w")
-        
-        self.symbol_tree = ttk.Treeview(self.bottom_frame, columns=("Variable", "Value"), show="headings")
-        self.symbol_tree.heading("Variable", text="Variable")
-        self.symbol_tree.heading("Value", text="Value")
-        self.symbol_tree.pack(fill=tk.BOTH, side=tk.LEFT, expand=True, padx=5, pady=5)
-        
-        self.symbol_scrollbar = tk.Scrollbar(self.bottom_frame, command=self.symbol_tree.yview)
-        self.symbol_scrollbar.pack(side=tk.LEFT, fill=tk.Y)
-        self.symbol_tree.configure(yscrollcommand=self.symbol_scrollbar.set)
-    
+
+    def create_symbol_table_field(self):
+        self.symbol_table_label = tk.Label(self.symbol_table_frame, text="Symbol Table")
+        self.symbol_table_label.pack(anchor="w")
+
+        # This is the field for displaying the symbol table
+        self.symbol_table_text = tk.Text(self.symbol_table_frame, wrap="none", height=10, state=tk.DISABLED)
+        self.symbol_table_text.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+
     def create_run_button(self):
         self.run_button = tk.Button(self.console_frame, text="Run", command=self.run_code)
         self.run_button.pack(fill=tk.X, padx=5, pady=5)
@@ -99,11 +98,11 @@ class LOLCodeInterpreterGUI:
             messagebox.showwarning("No Code", "Please write or load code to run.")
             return
         
-        # Lexemeize the code
+        # Lexemize the code
         Lexemes = lexical.lex(code)
         self.update_Lexemes_table(Lexemes)
         
-        # parse the code
+        # Parse the code
         result = syntax.syntax(code)
         self.console_output.config(state=tk.NORMAL)
         self.console_output.delete("1.0", tk.END)
@@ -111,30 +110,33 @@ class LOLCodeInterpreterGUI:
         self.console_output.config(state=tk.DISABLED)
         
         # If the syntax is correct, display visible output and update symbol table
-        if isinstance(result, str) and "syntax correct" in result:
-            self.console_output.insert("1.0", f"Syntax Correct\n{syntax.visible_output}\n")
+        if isinstance(result, tuple) and "syntax correct" in result[0]:
+            self.console_output.insert("1.0", f"Syntax Correct\n{result[1]}\n")
             self.console_output.insert(tk.END, "------------------------\n")
             
             # Update symbol table if syntax is correct
-            if hasattr(syntax, 'symbol_table'):  # Check if the symbol table is available
-                self.update_symbol_table(syntax.symbol_table)
+            symbol_table = result[2]  # Get the symbol table from the result
+            self.update_symbol_table(symbol_table)
         else:
             # Display syntax errors
             self.console_output.insert("1.0", f"Syntax Errors:\n{result}")
         
         self.console_output.config(state=tk.DISABLED)
-    
+
     def update_Lexemes_table(self, Lexemes):
         for row in self.Lexemes_tree.get_children():
             self.Lexemes_tree.delete(row)
         for Lexeme in Lexemes:
             self.Lexemes_tree.insert("", "end", values=(Lexeme[0], Lexeme[1]))
-    
+
     def update_symbol_table(self, symbol_table):
-        for row in self.symbol_tree.get_children():
-            self.symbol_tree.delete(row)
-        for variable, value in symbol_table.items():
-            self.symbol_tree.insert("", "end", values=(variable, value))
+        # Clear existing content
+        self.symbol_table_text.config(state=tk.NORMAL)
+        self.symbol_table_text.delete("1.0", tk.END)
+        
+        # Display the symbol table
+        self.symbol_table_text.insert(tk.END, str(symbol_table))
+        self.symbol_table_text.config(state=tk.DISABLED)
 
 # Run the application
 if __name__ == "__main__":
