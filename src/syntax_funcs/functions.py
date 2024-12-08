@@ -42,11 +42,12 @@ def func_def(text, start, errors, function_table):
     gtfo_found = False
     foundyr_found = False
     function_name = None
+    function_lines = 0
     inside_function = False
     multi_comment = False
-    comment_line_count = 0
+    lines_processed = 1
     local_symbol_table = {}
-    function_code = {}
+    function_code = ''
     
     def is_gtfo(lexeme):
         return lexeme[0][0] == 'GTFO'
@@ -77,6 +78,7 @@ def func_def(text, start, errors, function_table):
             return start, errors
     # Main processing of the function block
     for line in range(start+1, len(text.splitlines())):
+        lines_processed+=1
         lexeme = lexical.lex(text.splitlines()[line].strip())
         ## comment skipping
         lexeme = btw_comment(lexeme)
@@ -88,7 +90,6 @@ def func_def(text, start, errors, function_table):
                 errors += multi_comment
                 break
         if multi_comment or lexeme[0] == ['TLDR', 'Comment Delimiter']:
-            comment_line_count+=1
             continue
         # Check for GTFO 
         if is_gtfo(lexeme):
@@ -97,7 +98,8 @@ def func_def(text, start, errors, function_table):
                 errors += f"syntax error at line {line + 1}: 'GTFO' cannot be declared after 'FOUND YR' declaration\n"
                 return errors, None
             gtfo_found = True
-            function_code[line+1] = lexeme[0:]
+            function_code += text.splitlines()[line].strip() + "\n"
+            function_lines+=1
             continue
 
         if is_found_yr(lexeme):
@@ -105,7 +107,8 @@ def func_def(text, start, errors, function_table):
                 errors += f"syntax error at line {line + 1}: 'GTFO' cannot be declared after 'FOUND YR' declaration\n"
                 return errors, None
             foundyr_found = True
-            function_code[line+1] = lexeme[0:]
+            function_code += text.splitlines()[line].strip() + "\n"
+            function_lines+=1
             continue
 
         if is_if_u_say_so(lexeme):
@@ -113,23 +116,24 @@ def func_def(text, start, errors, function_table):
                 errors += f"syntax error at line {line + 1}: 'IF U SAY SO' cannot be declared without a 'FOUND YR' pr 'GTFO' declaration\n"
                 return errors, None
             function_table[function_name] = {'local_symbol_table': local_symbol_table, 'function_code': function_code}
-            return errors, line-comment_line_count
+            return errors, lines_processed
 
         # Process statements inside the function body
         if not gtfo_found and not foundyr_found:
             temp = errors
-            errors = statement(lexeme, line, errors, local_symbol_table, function_table)
+            errors,_ = statement(lexeme, line, errors, local_symbol_table, function_table)
             if len(temp) < len(errors):  # Syntax error occurred
                 return errors, None
-            function_code[line+1] = lexeme[0:]
+            function_code += text.splitlines()[line].strip() + "\n"
+            function_lines+=1
             continue
 
 
 
         # Handle invalid lines within the function block
         errors += f"syntax error at line {line + 1}: Unexpected syntax in function block\n"
-        return line, errors
+        return errors, lines_processed
 
     # If we exit the loop without finding IF U SAY SO
     errors += f"syntax error: 'IF U SAY SO' not found to close function block\n"
-    return line, errors
+    return lines_processed

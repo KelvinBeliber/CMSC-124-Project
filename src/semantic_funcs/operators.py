@@ -34,9 +34,17 @@ def arithmetic(lexeme, line, symbol_table, index, errors):
             continue
         if lexeme[index][1] == 'Identifier':  # Handle variables
             var_name = lexeme[index][0]
-            if(type(symbol_table[var_name]) not in (int, float)):
+            value = symbol_table[var_name]
+            if value in ("WIN", "FAIL"):
+                value = 1 if value=="WIN" else 0
+            elif type(value) == str:
+                try:
+                    value = int(value)
+                except:
+                    return errors+f"semantic error at {line+1}: YARN, which contains non-numeric characters, cannot be typecasted to NUMBR", symbol_table[var_name]
+            elif(type(value) not in (int, float)):
                 return errors+f"semantic error at {line+1}: invalid operand type for arithmetic operations", None, index
-            operands.append(symbol_table[var_name])  # Fetch variable value
+            operands.append(value)  # Fetch variable value
             index+=1
             continue
         if lexeme[index][1] in ('NUMBR Literal', 'NUMBAR Literal') :  # Handle numeric literals

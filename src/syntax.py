@@ -5,7 +5,7 @@ from syntax_funcs.comment import btw_comment
 from syntax_funcs.comment import obtw_comment
 from syntax_funcs.wazzupblock import vardec
 from syntax_funcs.statement import statement
-from syntax_funcs.func import func_def
+from syntax_funcs.functions import func_def
 from syntax_funcs.switch import wtf_switch
 from syntax_funcs.loop import loop
 from syntax_funcs.ifelse import conditional
@@ -70,7 +70,6 @@ def syntax(text):
                     errors, symbol_table, skip = vardec(text, line+1, symbol_table, errors)
                     if not skip and not symbol_table:
                         return errors
-                    skip -= line
                     wazzup = 1
                     continue
             if lexeme[0][0] == 'BUHBYE':
@@ -91,7 +90,6 @@ def syntax(text):
                 errors, skip = func_def(text, line, errors, function_table)
                 if not skip:
                     break
-                skip -= line
                 continue
             if lexeme[0][0] == 'WTF?' and possible_switch:
                 errors, skip = wtf_switch(text, line, errors, symbol_table, function_table)

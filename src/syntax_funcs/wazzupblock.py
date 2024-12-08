@@ -12,7 +12,7 @@ def vardec(text, start, symbol_table, errors):
         'BOTH SAEM', 'DIFFRINT',
         'SMOOSH'
     ]
-    comment_line_count = 0
+    lines_processed = 0
     multi_comment = False
     
     def is_valid_variable_declaration(lexeme):
@@ -55,20 +55,20 @@ def vardec(text, start, symbol_table, errors):
         return errors
 
     for line in range(start, len(text.splitlines())):
+        lines_processed+=1
         lexeme = lexical.lex(text.splitlines()[line].strip())
         ## comment skipping
         lexeme = btw_comment(lexeme)
         if len(lexeme) == 0:
             continue
+        
         if lexeme[0] == ['OBTW', 'Comment Delimiter'] or lexeme[0] == ['TLDR', 'Comment Delimiter']:
             multi_comment = obtw_comment(errors, lexeme, line, len(text.splitlines()), multi_comment)
             if type(multi_comment) == str:
                 errors += multi_comment
                 break
         if multi_comment or lexeme[0] == ['TLDR', 'Comment Delimiter']:
-            comment_line_count+=1
             continue
-        
         if lexeme is not None:
             if is_valid_variable_declaration(lexeme):
                 if len(lexeme) == 2:
@@ -90,7 +90,7 @@ def vardec(text, start, symbol_table, errors):
                     return errors, None, None
             else:
                 if ['BUHBYE', 'Variable Declaration Delimiter'] in lexeme:
-                    return errors, symbol_table, line-comment_line_count
+                    return errors, symbol_table, lines_processed
                 errors += f"syntax error at line {line + 1}: Incorrect variable declaration syntax\n"
                 return errors, None, None
     errors += f"syntax error at line {line + 1}: 'BUHBYE' keyword never called\n"
