@@ -29,6 +29,7 @@ def evaluate_function_call(lexeme, line, index, function_table, symbol_table, er
                         ), visible_output
                 if lexeme[1][0] in operators:  # Handle nested operators
                     errors,nested_result,_ = evaluate_operator(lexeme[1:], line, symbol_table, 0, errors)
+                    print(lexeme)
                     if errors:
                         return errors, None, None
                     return errors, nested_result, visible_output
@@ -75,7 +76,6 @@ def evaluate_function_call(lexeme, line, index, function_table, symbol_table, er
         return errors+f"semantic error at {line+1}: invalid argument for function call", None, index
     # Perform the operation
     errors, result1, result2 = evaluate(function_table, function_name, errors)
-    # if len(temp) < len(errors):
     return errors, result1, result2
 
 def evaluate_casting(line, errors, symbol_table, var_name, new_type):

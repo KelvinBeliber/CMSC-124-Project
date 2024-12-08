@@ -3,7 +3,7 @@ import lexical
 from syntax_funcs.comment import obtw_comment
 from syntax_funcs.comment import btw_comment
 
-def conditional(text, start, syntaxResult, symbol_table, function_table):
+def conditional(text, start, errors, symbol_table, function_table):
     orly = False
     yarly = False
     nowai = False
@@ -30,9 +30,9 @@ def conditional(text, start, syntaxResult, symbol_table, function_table):
         if len(lexeme) == 0:
             continue
         if lexeme[0] == ['OBTW', 'Comment Delimiter'] or lexeme[0] == ['TLDR', 'Comment Delimiter']:
-            multi_comment = obtw_comment(syntaxResult, lexeme, line, len(text.splitlines()), multi_comment)
+            multi_comment = obtw_comment(errors, lexeme, line, len(text.splitlines()), multi_comment)
             if type(multi_comment) == str:
-                syntaxResult += multi_comment
+                errors += multi_comment
                 break
         if multi_comment or lexeme[0] == ['TLDR', 'Comment Delimiter']:
             comment_line_count+=1
@@ -43,54 +43,53 @@ def conditional(text, start, syntaxResult, symbol_table, function_table):
                 orly = True 
                 continue
             else:
-                syntaxResult += f"syntax error at line {line + 1}: Expected 'O RLY?' to start conditional block\n"
-                return syntaxResult, None
+                errors += f"syntax error at line {line + 1}: Expected 'O RLY?' to start conditional block\n"
+                return errors, None
             
         if orly:
             if is_valid_orly_start(lexeme):
-                syntaxResult, skip = conditional(text, line, syntaxResult, symbol_table, function_table)
+                errors, skip = conditional(text, line, errors, symbol_table, function_table)
                 if skip == None:
-                    syntaxResult += f"syntax error at line {line + 1}: Unexpected syntax in nested conditional\n"
-                    return syntaxResult, None
+                    errors += f"syntax error at line {line + 1}: Unexpected syntax in nested conditional\n"
+                    return errors, None
                 skip -= line
                 continue
             
         if is_yarly(lexeme):
             if orly == False:
-                syntaxResult += f"syntax error at line {line + 1}: Expected 'YA RLY' after 'O RLY?\n"
-                return syntaxResult, None
+                errors += f"syntax error at line {line + 1}: Expected 'YA RLY' after 'O RLY?\n"
+                return errors, None
             yarly = True
             in_conditional = True
             continue
 
         if is_nowai(lexeme):
             if yarly == False:
-                syntaxResult += f"syntax error at line {line + 1}: Unexpected 'NO WAI' without 'YA RLY'\n"
-                return syntaxResult, None
+                errors += f"syntax error at line {line + 1}: Unexpected 'NO WAI' without 'YA RLY'\n"
+                return errors, None
             nowai = True
             in_conditional = True
             continue
 
         if is_oic(lexeme):
             if yarly == False:
-                syntaxResult += f"syntax error at line {line + 1}: 'OIC' without 'YA RLY'\n"
-                return syntaxResult, None
+                errors += f"syntax error at line {line + 1}: 'OIC' without 'YA RLY'\n"
+                return errors, None
             elif orly == False:
-                syntaxResult += f"syntax error at line {line + 1}: 'OIC' without 'O RLY?''\n"
-                return syntaxResult, None
-            return syntaxResult, line-comment_line_count
+                errors += f"syntax error at line {line + 1}: 'OIC' without 'O RLY?''\n"
+                return errors, None
+            return errors, line-comment_line_count
         
         if in_conditional:
-            temp = syntaxResult
-            syntaxResult = statement(lexeme, line, syntaxResult, symbol_table, function_table)
-            if len(temp) < len(syntaxResult):  # Syntax error occurred
-                return syntaxResult, None
+            temp = errors
+            errors,_ = statement(lexeme, line, errors, symbol_table, function_table, True)
+            if len(temp) < len(errors):  # Syntax error occurred
+                return errors, None
             continue
 
-
         # Handle invalid lines within the if-else block
-        syntaxResult += f"syntax error at line {line + 1}: Unexpected syntax in 'O RLY?' block\n"
-        return syntaxResult, None
+        errors += f"syntax error at line {line + 1}: Unexpected syntax in 'O RLY?' block\n"
+        return errors, None
     
-    syntaxResult += f"syntax error at line {line + 1}: No OIC to close conditional\n"
-    return syntaxResult, None
+    errors += f"syntax error at line {line + 1}: No OIC to close conditional\n"
+    return errors, None

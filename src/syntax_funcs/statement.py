@@ -149,7 +149,7 @@ def expression(lexeme, line, errors, symbol_table): # <operator> | <literal>
     else:
         return operator(lexeme, line, errors, symbol_table, 0)
 
-def visible(lexeme, line, index, errors, symbol_table):
+def visible(lexeme, line, index, errors, symbol_table, in_code_block):
     temp=errors
     index+=1
     while index < len(lexeme):
@@ -169,16 +169,16 @@ def visible(lexeme, line, index, errors, symbol_table):
                 errors += f"syntax error at line {line + 1}: Insufficient VISIBLE arguments\n"
                 break
             index += 1  # Move past 'AN'
-    if len(temp) == len(errors):
+    if len(temp) == len(errors) and not in_code_block:
         errors, result, _ = evaluate_visible(lexeme, line, symbol_table, 0, errors)
         if len(temp) == len(errors):
             return errors, result
     return errors, None
 
-def statement(lexeme, line, errors, symbol_table, function_table):
+def statement(lexeme, line, errors, symbol_table, function_table, in_code_block):
         # printing output
     if lexeme[0][0] == 'VISIBLE':
-        return visible(lexeme, line, 0, errors, symbol_table)
+        return visible(lexeme, line, 0, errors, symbol_table, in_code_block)
     
     # taking input
     if lexeme[0][0] == 'GIMMEH':
@@ -188,7 +188,8 @@ def statement(lexeme, line, errors, symbol_table, function_table):
             return errors + f"syntax error at line {line+1}: Incorrect GIMMEH syntax!\n", None
         if lexeme[1][0] not in symbol_table:
             return errors + f"syntax error at line {line+1}: Variable {lexeme[1][0]} not declared!\n", None
-        symbol_table[lexeme[1][0]] = evaluate_gimmeh()
+        if not in_code_block:
+            symbol_table[lexeme[1][0]] = evaluate_gimmeh()
         return errors, None  # Correct GIMMEH syntax
     
     if lexeme[0][0] == 'I IZ':

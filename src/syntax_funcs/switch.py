@@ -113,7 +113,7 @@ def wtf_switch(text, start, errors, symbol_table, function_table):
         
         if in_case_block:
             temp = errors
-            errors = statement(lexeme, line, errors, symbol_table, function_table)
+            errors = statement(lexeme, line, errors, symbol_table, function_table, True)
             if len(temp) < len(errors):  # Syntax error occurred
                 return errors, None
             continue

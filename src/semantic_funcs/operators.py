@@ -38,12 +38,13 @@ def arithmetic(lexeme, line, symbol_table, index, errors):
             if value in ("WIN", "FAIL"):
                 value = 1 if value=="WIN" else 0
             elif type(value) == str:
+                print(value)
                 try:
                     value = int(value)
                 except:
-                    return errors+f"semantic error at {line+1}: YARN, which contains non-numeric characters, cannot be typecasted to NUMBR", symbol_table[var_name]
+                    return errors+f"semantic error at {line+1}: YARN, which contains non-numeric characters, cannot be typecasted to NUMBR", value, None
             elif(type(value) not in (int, float)):
-                return errors+f"semantic error at {line+1}: invalid operand type for arithmetic operations", None, index
+                return errors+f"semantic error at {line+1}: invalid operand type for arithmetic operations", value, None
             operands.append(value)  # Fetch variable value
             index+=1
             continue
@@ -52,7 +53,7 @@ def arithmetic(lexeme, line, symbol_table, index, errors):
             index+=1
             continue
         if lexeme[index][0] in operators:  # Handle nested operators
-            errors,nested_result,index = arithmetic(lexeme, line, symbol_table, index,errors)
+            errors,nested_result,index = evaluate_operator(lexeme, line, symbol_table, index, errors)
             if errors:
                 return errors, None, index
             operands.append(nested_result)

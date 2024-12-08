@@ -113,16 +113,16 @@ def syntax(text):
                 possible_switch = True
                 continue
             temp = errors
-            errors, temp_output = statement(lexeme, line, errors, symbol_table, function_table)
+            errors, temp_output = statement(lexeme, line, errors, symbol_table, function_table, False)
             if temp_output:
                 visible_output += temp_output
             if len(temp) < len(errors):
                 break
     # debugging: tracking symbols and defined functions
-    for key in symbol_table:
-        print(f'{key}: {symbol_table[key]}')
-    for key in function_table:
-        print(f'{key}: {function_table[key]}')
+    # for key in symbol_table:
+    #     print(f'{key}: {symbol_table[key]}')
+    # for key in function_table:
+    #     print(f'{key}: {function_table[key]}')
     if len(errors)==0:
         print("------------------------")
         print(visible_output)
