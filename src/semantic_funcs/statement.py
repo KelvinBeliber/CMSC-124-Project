@@ -29,7 +29,6 @@ def evaluate_function_call(lexeme, line, index, function_table, symbol_table, er
                         ), visible_output
                 if lexeme[1][0] in operators:  # Handle nested operators
                     errors,nested_result,_ = evaluate_operator(lexeme[1:], line, symbol_table, 0, errors)
-                    print(lexeme)
                     if errors:
                         return errors, None, None
                     return errors, nested_result, visible_output
@@ -227,20 +226,6 @@ def evaluate_visible(lexeme, line, symbol_table, index, errors):
 #         if len(temp)<len(errors):
 #             return errors
 #     return errors
-
-def evaluate_statement(lexeme, line, symbol_table, index, errors):
-    keyword = lexeme[index][0]
-    # Determine which operator function to call
-    if keyword == 'VISIBLE':
-        return evaluate_visible(lexeme, line, symbol_table, 0, errors)
-    if keyword == 'I IZ':  # Arithmetic operators
-        return evaluate_function_call(lexeme, line, symbol_table, 0, errors)
-    if keyword == 'GIMMEH':  # Boolean operators
-        symbol_table[lexeme[index+1][0]] = evaluate_gimmeh()
-        return errors, None, None
-    if operator in operators[13:15]:  # Comparison operators
-        return comparison(lexeme, line, symbol_table, index, errors)
-    raise ValueError(f"syntax error at line {line + 1}: Unknown operator '{lexeme[index][0]}'\n")
 
 
 

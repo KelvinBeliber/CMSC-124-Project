@@ -7,7 +7,7 @@ def conditional(text, start, errors, symbol_table, function_table):
     orly = False
     yarly = False
     nowai = False
-    comment_line_count = 0
+    lines_processed = 0
     multi_comment = False
     in_conditional = False
 
@@ -24,6 +24,7 @@ def conditional(text, start, errors, symbol_table, function_table):
         return lexeme[0][0] == "OIC"
     
     for line in range(start, len(text.splitlines())):
+        lines_processed+=1
         lexeme = lexical.lex(text.splitlines()[line].strip())
         ## comment skipping
         lexeme = btw_comment(lexeme)
@@ -35,7 +36,6 @@ def conditional(text, start, errors, symbol_table, function_table):
                 errors += multi_comment
                 break
         if multi_comment or lexeme[0] == ['TLDR', 'Comment Delimiter']:
-            comment_line_count+=1
             continue
 
         if not orly:
@@ -78,7 +78,7 @@ def conditional(text, start, errors, symbol_table, function_table):
             elif orly == False:
                 errors += f"syntax error at line {line + 1}: 'OIC' without 'O RLY?''\n"
                 return errors, None
-            return errors, line-comment_line_count
+            return errors, lines_processed
         
         if in_conditional:
             temp = errors

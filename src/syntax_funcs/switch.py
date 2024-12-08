@@ -2,6 +2,7 @@ import lexical
 from syntax_funcs.comment import btw_comment
 from syntax_funcs.comment import obtw_comment
 from syntax_funcs.statement import statement
+from semantic_funcs.switch import evaluate_switch
 
 def wtf_switch(text, start, errors, symbol_table, function_table):
     # Variables to track state
@@ -11,8 +12,9 @@ def wtf_switch(text, start, errors, symbol_table, function_table):
     in_case_block = False
     cases = {}
     default_case = None
-    comment_line_count = 0
+    lines_processed = 0
     multi_comment = False
+    temp = errors
 
     # Helper function to check if it's the start of a WTF? block
     def is_valid_wtf_start(lexeme):
@@ -36,9 +38,12 @@ def wtf_switch(text, start, errors, symbol_table, function_table):
     # Helper function to check if it's the closing OIC
     def is_oic(lexeme):
         return lexeme[0][0] == 'OIC'
-
+    
+    choice = symbol_table[lexical.lex(text.splitlines()[start-1].strip())[0][0]]
+    
     # Main processing of the WTF? block
     for line in range(start, len(text.splitlines())):
+        lines_processed+=1
         lexeme = lexical.lex(text.splitlines()[line].strip())
         ## comment skipping
         lexeme = btw_comment(lexeme)
@@ -50,7 +55,6 @@ def wtf_switch(text, start, errors, symbol_table, function_table):
                 errors += multi_comment
                 break
         if multi_comment or lexeme[0] == ['TLDR', 'Comment Delimiter']:
-            comment_line_count+=1
             continue
         # Check for the start of WTF? IT
         if not wtf_start_found:
@@ -71,58 +75,60 @@ def wtf_switch(text, start, errors, symbol_table, function_table):
                 return errors, None
             in_case_block = True
             omg = True
+            omg_condition = int(lexeme[1][0]) if lexeme[1][1] == 'NUMBR Literal' else float(lexeme[1][0]) if lexeme[1][1] == 'NUMBAR Literal' else lexeme[1][0]
+            cases[omg_condition] = ''
             continue
 
         # Check for OMGWTF case
         if is_omgwtf_case(lexeme):
             if default_case is not None:
                 errors += f"syntax error at line {line + 1}: 'OMGWTF' can only appear once\n"
-                return errors, None
+                return errors, None, None
             if in_case_block:
                 errors += f"syntax error at line {line + 1}: 'OMGWTF' cannot appear inside an 'OMG' case\n"
-                return errors, None
+                return errors, None, None
             in_case_block = True
             omgwtf = True
-            # Handle the code block within OMGWTF
-            # default_case = {'code': []}
-            # errors = statement(lexeme, line, errors, symbol_table)
-            # if errors.endswith("error"):  # Assuming statement appends "error" on failure
-            #     return line, errors
+            omg_condition = None
+            cases[omg_condition] = ''
             continue
 
         # Check for OIC closure
         if is_oic(lexeme):
-            
             if not wtf_start_found:
                 errors += f"syntax error at line {line + 1}: 'OIC' without a 'WTF?' block\n"
-                return errors, None
+                return errors, None, None
 
             # Check if there is at least one OMG or OMGWTF case before ending
             if not omg and not omgwtf:
                 errors += f"syntax error at line {line + 1}: 'WTF?' block must contain at least one 'OMG' or 'OMGWTF' case\n"
-                return errors, None
-
-            return errors, line-comment_line_count
+                return errors, None, None
+            errors, result = evaluate_switch(choice, cases, symbol_table, function_table, errors)
+            if len(temp)==len(errors):
+                return errors, lines_processed, result
+            
+            return errors, None, None
         
         if is_gtfo(lexeme):
             if not in_case_block:
                 errors += f"syntax error at line {line + 1}: Expected an 'OMG' or 'OMGWTF' before declaring 'GTFO'\n"
-                return errors, None
+                return errors, None, None
             in_case_block = False
             continue
         
         if in_case_block:
             temp = errors
-            errors = statement(lexeme, line, errors, symbol_table, function_table, True)
+            errors,_ = statement(lexeme, line, errors, symbol_table, function_table, True)
             if len(temp) < len(errors):  # Syntax error occurred
-                return errors, None
+                return errors, None, None
+            cases[omg_condition] += text.splitlines()[line].strip() + "\n"
             continue
 
 
         # Handle invalid lines within the switch-case block
         errors += f"syntax error at line {line + 1}: Unexpected syntax in 'WTF?' block\n"
-        return errors, None
+        return errors, None, None
 
     # If we exit the loop without finding OIC
     errors += f"syntax error: 'OIC' not found to close 'WTF?' block\n"
-    return errors, None
+    return errors, None, None

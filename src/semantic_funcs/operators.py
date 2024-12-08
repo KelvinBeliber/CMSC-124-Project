@@ -38,7 +38,6 @@ def arithmetic(lexeme, line, symbol_table, index, errors):
             if value in ("WIN", "FAIL"):
                 value = 1 if value=="WIN" else 0
             elif type(value) == str:
-                print(value)
                 try:
                     value = int(value)
                 except:

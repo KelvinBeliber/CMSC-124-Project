@@ -26,6 +26,7 @@ def syntax(text):
     arithmetic_ops = ['SUM OF', 'DIFF OF', 'PRODUKT OF', 'QUOSHUNT OF', 'MOD OF', 'BIGGR OF', 'SMALLR OF']
     boolean_ops = ['BOTH OF', 'EITHER OF', 'WON OF', 'NOT', 'ALL OF', 'ANY OF']
     for line in range(0, len(text.splitlines())):
+        temp_output=''
         lexeme = lexical.lex(text.splitlines()[line].lstrip().rstrip())
         if lexeme is not None:
             ## comment skipping
@@ -92,10 +93,11 @@ def syntax(text):
                     break
                 continue
             if lexeme[0][0] == 'WTF?' and possible_switch:
-                errors, skip = wtf_switch(text, line, errors, symbol_table, function_table)
+                errors, skip, temp_output = wtf_switch(text, line, errors, symbol_table, function_table)
+                if temp_output:
+                    visible_output+=temp_output
                 if not skip:
                     break
-                skip -= line
                 continue
             if lexeme[0][0] == 'IM IN YR':
                 errors, skip = loop(text, line, errors, symbol_table, function_table)
@@ -107,7 +109,6 @@ def syntax(text):
                 errors, skip = conditional(text, line, errors, symbol_table, function_table)
                 if not skip:
                     break
-                skip -= line
                 continue
             if lexeme[0][1]=='Identifier' and len(lexeme)==1:
                 possible_switch = True

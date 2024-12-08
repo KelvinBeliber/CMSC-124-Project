@@ -119,7 +119,6 @@ def func_def(text, start, errors, function_table):
         # Process statements inside the function body
         if not gtfo_found and not foundyr_found:
             temp = errors
-            print(lexeme[0])
             errors,_ = statement(lexeme, line, errors, local_symbol_table, function_table, True)
             if len(temp) < len(errors):  # Syntax error occurred
                 return errors, None
