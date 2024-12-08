@@ -48,7 +48,7 @@ def arithmetic(lexeme, line, symbol_table, index, errors):
             index+=1
             continue
         if lexeme[index][1] in ('NUMBR Literal', 'NUMBAR Literal') :  # Handle numeric literals
-            operands.append(int(lexeme[index][0]))
+            operands.append(int(lexeme[index][0]) if lexeme[index][1] == 'NUMBR Literal' else float(lexeme[index][0]))
             index+=1
             continue
         if lexeme[index][0] in operators:  # Handle nested operators
