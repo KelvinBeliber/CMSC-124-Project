@@ -109,8 +109,13 @@ def syntax(text):
                 if not skip:
                     break
                 continue
+
             if lexeme[0][1]=='Identifier' and len(lexeme)==1:
-                possible_switch = True
+                if lexeme[0][0] in symbol_table:
+                    possible_switch = True
+                else:
+                    errors += f"syntax error at line {line+1}: Unknown Identifier\n"
+                    break
                 continue
             possible_switch = False
             possible_ifelse = False

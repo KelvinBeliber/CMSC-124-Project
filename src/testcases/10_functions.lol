@@ -10,6 +10,8 @@ HAI
         FOUND YR SUM OF x AN y
     IF U SAY SO
 
+asdadsada
+sadsadsad
     HOW IZ I printName YR person
         VISIBLE "Hello, " + person
         GTFO
